@@ -41,6 +41,22 @@ sequenceDiagram
 
 ---
 
+## 📂 Repository Guide (Where to find everything)
+
+Our project is a full-stack monorepo. Here is exactly where you can find all the core components for our DDiB26 submission:
+
+*   **[`/contracts`](file:///contracts)**: The Blockchain Layer (Foundry/Solidity)
+    *   Contains our ERC-3643 compliant tokens, Auto-KYC Identity Registry, AMM Exchange logic, and Multi-Signature Escrow.
+*   **[`/backend`](file:///backend)**: The Oracle & Yield Engine (Python FastAPI)
+    *   Contains our off-chain service that ingests physical hardware telemetry, calculates off-chain yield, and serves it to our smart contracts.
+*   **[`/frontend`](file:///frontend)**: The User Interface (Next.js & React)
+    *   Contains the highly polished Web3 dApp where users can connect MetaMask, pass KYC, and buy RWA tokens using Mock USDC.
+*   **[`/docs`](file:///docs)**: Documentation & Visuals
+    *   Contains our presentation scripts (`PRESENTATION.md`), LaTeX analysis (`DDIB.tex`), and our visual architecture/economic maps (`ARCHITECTURE_MAPS.md`).
+*   **[`/final_submission`](file:///final_submission)**: The final compiled artifacts required for grading.
+
+---
+
 ## 🔌 Tech Stack & Layers
 
 ### 1. Smart Contracts (Foundry & Solidity)
