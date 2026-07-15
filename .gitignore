@@ -1,0 +1,43 @@
+# OS Files
+.DS_Store
+
+# -----------------
+# Global / Misc
+# -----------------
+.agents/
+.gemini/
+skills-lock.json
+
+# -----------------
+# Frontend (Next.js)
+# -----------------
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/*.tsbuildinfo
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+npm-debug.log*
+
+# -----------------
+# Backend (Python FastAPI)
+# -----------------
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+backend/*.pyd
+backend/.pytest_cache/
+backend/.env
+
+# -----------------
+# Contracts (Foundry)
+# -----------------
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/.env
