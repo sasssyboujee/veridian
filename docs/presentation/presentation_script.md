@@ -29,29 +29,27 @@ This is your master script for presenting to the judges. It is tailored specific
 ---
 
 ## 💻 Phase 2: The Live Demo (3-5 mins)
-*Goal: Prove that the tech actually works and is legally compliant.*
+*Goal: Prove that the tech actually works, is visually powerful, and enforces our economic model on-chain.*
 
-**1. The "KYC" Step (ERC-3643 Compliance)**
-> *"Let's look at the platform. Because these tokens represent yield-bearing assets, they are securities. To comply with the FSCA, we implemented the ERC-3643 standard."*
-- Click **"Pass KYC"** (in your MetaMask/WalletConnect workflow).
-- Explain: *"This mimics a SumSub KYC check. The blockchain now whitelists this specific wallet. If a user tries to send these tokens to an unverified wallet, the blockchain will physically revert the transaction."*
+**1. The "Aha!" Moment (Asset Command Center)**
+- Navigate to the **Asset Map** page.
+> *"Welcome to the Asset Command Center. What you're seeing is a real-time, high-density topology of our global infrastructure. Every node represents a physical asset—solar panels, wind turbines, agriculture—feeding telemetry directly to our decentralized network."*
 
-**2. The Purchase (Liquidity Engine)**
-- Go to the **Market** page.
-- Explain: *"Users swap their stablecoins (USDC) into our regional index pools using an Automated Market Maker (AMM)."*
-- Execute a swap of USDC for `WCS-POOL` (Western Cape Solar) tokens.
+**2. Step 1: Deploy Secure IoT Device**
+- Fill out the form to deploy a new asset (e.g., "Western Cape Solar Array 5", $50,000 Value). Select the region and click **Onboard & Deploy**.
+> *"Let’s deploy a new asset in South Africa. As soon as the hardware comes online, its integrated TPM sensor performs a cryptographic handshake. The map dynamically zooms in and tracks it, proving to the network that the physical asset actually exists and is secure."*
 
-**3. The 'Aha!' Moment (Dashboard & Map)**
-- Go to the **Dashboard** page.
-- **Show the Live Map:** Point to the new interactive map animation on the right. 
-> *"Here you can see the real-time aggregation of our assets. Telemetry from individual solar sites across the country flows into our Central Liquidity Pool."*
-- **Show the Hardware Terminal:** Point to the scrolling green terminal logs. 
-> *"This isn't just an animation. These are cryptographic signatures from the TPM IoT sensors on the physical hardware, proving energy is actually being generated before any yield is paid out."*
+**3. Step 2: Connect to Network Web**
+- Click **Establish Web Link** to pool the asset.
+> *"But standalone assets carry high isolated risk. Here is our regional pooling solution in action. By establishing a web link, we programmatically lock this solar array into the regional liquidity pool. Watch the visual network topology update as the asset is securely aggregated."*
 
-**4. Simulate Tampering (The Climax)**
-- Scroll down to the Admin Controls and click **Simulate SLA Breach**.
-- Watch the Operator Stake turn red and get slashed.
-> *"If an operator goes offline or tries to spoof data, the oracle catches the variance. The smart contract instantly slashes their staked USDC, protecting the retail investors."*
+**4. The 'Rogue' Defense in Action**
+- Point to the color-coded nodes on the map.
+> *"Our system continuously pings the TPM sensors. You'll see verified handshakes as green nodes, latency warnings in yellow, and compromised hardware locked down in red. If an asset is tampered with, the smart contract catches it right here and protects the retail investors."*
+
+**5. Step 3: Distribute Yield**
+- Click **Trigger $1,000 Yield** and watch the payout particles and financial breakdown.
+> *"Now for the most important part: Revenue. We'll simulate a physical revenue event. The smart contract instantly, trustlessly splits it exactly according to our business model: 70% to token holders, 20% to the operator, and 10% for Opex. You can see the funds programmatically settling on-chain in real-time."*
 
 ---
 
