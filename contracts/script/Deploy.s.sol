@@ -52,10 +52,10 @@ contract DeployScript is Script {
         
         // 6. Use Factory to deploy dummy assets for different industries
         address[] memory tokens = new address[](4);
-        tokens[0] = rwaFactory.createAsset("Solar Plant Alpha", "SPA", 100_000 * 10**18);
-        tokens[1] = rwaFactory.createAsset("Horizon Real Estate", "HRE", 250_000 * 10**18);
-        tokens[2] = rwaFactory.createAsset("Azure Logistics Hub", "ALH", 50_000 * 10**18);
-        tokens[3] = rwaFactory.createAsset("Omega Datacenter", "ODC", 300_000 * 10**18);
+        tokens[0] = rwaFactory.createAsset("Western Cape Solar Pool", "WCS-POOL", 100_000 * 10**18);
+        tokens[1] = rwaFactory.createAsset("Gauteng Logistics Fleet", "GLF-POOL", 250_000 * 10**18);
+        tokens[2] = rwaFactory.createAsset("Free State Agri-Machinery", "FSA-POOL", 50_000 * 10**18);
+        tokens[3] = rwaFactory.createAsset("KZN Wind Farm Alliance", "KZN-POOL", 300_000 * 10**18);
 
         // 7. Verify the deployed pools and fund them for demo purposes
         RWAFactory.AssetData[] memory assets = rwaFactory.getAllAssetsData();
@@ -92,9 +92,9 @@ contract DeployScript is Script {
         console.log("AutoKYC:", address(autoKYC));
         console.log("MockUSDC:", address(usdc));
         console.log("RWAFactory:", address(rwaFactory));
-        console.log("SPA Token:", tokens[0]);
-        console.log("HRE Token:", tokens[1]);
-        console.log("ALH Token:", tokens[2]);
-        console.log("ODC Token:", tokens[3]);
+        console.log("WCS Token:", tokens[0]);
+        console.log("GLF Token:", tokens[1]);
+        console.log("FSA Token:", tokens[2]);
+        console.log("KZN Token:", tokens[3]);
     }
 }

@@ -22,9 +22,9 @@ def check_response(res, step_name):
 
 # 1. Create an Asset
 asset_payload = {
-    "name": "Solar Plant Alpha",
-    "spv_entity": "Solar SPV LLC",
-    "jurisdiction": "US",
+    "name": "Western Cape Solar Pool",
+    "spv_entity": "Khanya Solar SPV (Pty) Ltd",
+    "jurisdiction": "ZA",
     "asset_type": "equipment"
 }
 res = requests.post(f"{BASE_URL}/assets", json=asset_payload)
@@ -97,3 +97,9 @@ oracle_payload = check_response(res, "Oracle Yield Fetch")
 print(f"✅ Oracle Payload Ready: {json.dumps(oracle_payload, indent=2)}")
 
 print("🎉 End-to-End API Flow Simulation Successful!")
+print("\n--- Revenue Split Breakdown (Mock) ---")
+print("Gross Revenue Generated: $10,000.00")
+print("Operator Fee (20%):       $2,000.00")
+print("SPV Opex & Maint. (10%):  $1,000.00")
+print("Token Holder Yield (70%): $7,000.00")
+print("--------------------------------------\n")
