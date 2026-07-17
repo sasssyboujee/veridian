@@ -23,7 +23,7 @@ contract FundPoolScript is Script {
             // Fund pool with 50,000 SPA and 500,000 USDC to provide liquidity
             // 1 SPA = 10 USDC (arbitrary initial liquidity)
             RWAToken spa = RWAToken(tokenAddr);
-            MockUSDC usdc = MockUSDC(usdcAddr);
+            MockUSDC usdc = MockUSDC(payable(usdcAddr));
             
             spa.transfer(poolAddr, 50_000 * 10**18);
             usdc.mint(poolAddr, 500_000 * 10**18);

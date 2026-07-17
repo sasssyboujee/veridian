@@ -10,13 +10,16 @@ This platform bridges physical machinery (e.g., solar generators, agricultural e
 
 ```mermaid
 flowchart TD
-    Asset[Real World Asset] -->|Maintains Asset, Operational Cost| Operator[Physical Operator]
-    Asset -->|Legal Liability, Legal Risk| SPV[Special Purpose Vehicle]
-    Asset -->|Capital Investment, Financial Risk| Investors[Token Holders]
+    Asset[Real World Asset] -->|Lease Agreement, Usage Payment| Lessee[Household / End-User]
+    Asset -->|Legal Liability, Maintenance| SPV[Special Purpose Vehicle]
+    Asset -->|Capital Investment, Hardware Cost| Investors[Token Holders]
 
-    Yield[Net Yield] -->|20% Reward| Operator
-    Yield -->|10% Maintenance & Opex| SPV
-    Yield -->|70% Profit / ROI| Investors
+    Revenue[Usage Revenue] -->|15-25% Depreciation Reserve| Fund[Hardware Replacement Fund]
+    Revenue -->|10-15% Management & Insurance| SPV
+    Revenue -->|60-75% Net Yield| Investors
+
+    Investors -->|Lock Tokens 1-10 Years| veRWA[Time-Locked Staking Vault]
+    veRWA -.->|Yield Multiplier| Investors
 ```
 
 ---
@@ -86,11 +89,9 @@ Located in `contracts/`.
 Located in `backend/`.
 - **IIoT Telemetry Ingestion (`/telemetry`)**: Accepts real-time utilization logs from physical assets.
 - **TPM Signature Verification (`app/services/tpm_verify.py`)**: Uses cryptographic ECDSA verification to validate that the telemetry was signed by the asset's built-in Hardware Root of Trust (TPM 2.0 / Secure Enclave) and has not been tampered with.
-- **Async Yield Fee Engine (`app/services/yield_engine.py`)**: Gathers verified telemetry logs and calculates the **7.5% tiered gross fee** structure:
-  - **1.0%** Champions Fee (for SPV operational costs)
-  - **2.0%** Core Fee (platform upkeep)
-  - **4.5%** Opportunity Fee (reinvested into future equipment purchases)
-  - **92.5%** Net Yield distribution
+- **Async Yield Fee Engine (`app/services/yield_engine.py`)**: Gathers verified telemetry logs and calculates gross revenue (`units_consumed * usage_rate`). Deducts fees based on a **Dynamic Time-Locked Split** derived from the investor's lock duration in the `RWAVault`:
+  - **Liquid/Short-Term Holders**: 60% Net Yield (25% Depreciation Reserve, 15% SPV Fee).
+  - **Locked/Long-Term Holders**: 75% Net Yield (15% Depreciation Reserve, 10% SPV Fee).
 - **Oracle Endpoint (`/yields/oracle/{asset_id}`)**: Delivers a secure, deterministic, JSON payload compiled for Chainlink Functions containing the scaled yield amount in `wei` (18-decimal precision).
 
 ### 3. Database Layer (Supabase PostgreSQL)

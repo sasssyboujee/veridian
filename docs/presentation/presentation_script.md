@@ -1,62 +1,63 @@
 # Live Demo & Pitch Script
 
-This is your master script for presenting to the judges. It is tailored specifically for the South African context, focusing on the real-world business model, risk mitigation, and live blockchain demonstration.
+This is your master script for presenting to the judges. It is structured into 6 distinct slides, mapping your narrative directly to the visual aids and the live demonstration.
 
 ---
 
-## 🎭 Phase 1: The Pitch (3-4 mins)
-*Goal: Hook the judges with a real-world South African problem and a bulletproof business model.*
+## 🖥️ Slide 1: The Problem (Title & Hook)
+**Visual:** "Before" architecture diagram—centralized Hub-and-Spoke power plant monopoly vs. locked-out retail investors.
 
-**1. The Problem (Infrastructure Funding in SA)**
-> "In South Africa, infrastructure development—whether it's solar energy in the Western Cape or logistics fleets in Gauteng—is bottlenecked by a lack of liquid, accessible capital. We are solving this by tokenizing physical, cash-flowing assets and opening them up to global liquidity."
-
-**2. The Solution (Asset Pooling)**
-> "But we aren't just tokenizing a single solar panel. That’s too risky. If a bird breaks one panel, the investor loses everything. Instead, we use **Regional Asset Pools**. We pool 1,000 solar panels in the Western Cape into a single `WCS-POOL` token. This dilutes risk and creates highly liquid, fungible tokens."
-
-**3. The Business Model (Revenue Split)**
-> "How does it actually make money? Let's take our Western Cape Solar Pool. 
-> - **20%** goes to the local Operator for physical maintenance.
-> - **10%** is kept by the SPV (Special Purpose Vehicle) for insurance and Opex.
-> - **70%** of the energy revenue is programmatically converted to USDC and pushed on-chain directly to the token holders."
-
-**4. The 'Rogue' Defense (Answering the hardest question)**
-> "The biggest question VCs ask is: *'What stops the guy in South Africa from stealing the solar panel?'* 
-> We built a 3-Layer Defense Mechanism:
-> 1. **Financial:** To manage an asset, the operator must stake USDC in our smart contract. If an asset goes offline, they are automatically slashed to compensate token holders.
-> 2. **Hardware:** Assets are fitted with TPM IoT sensors acting as kill switches. If tampered with, they brick themselves.
-> 3. **Legal:** The SPV holds the legal title, fully covered by commercial asset recovery insurance."
+**Speaker Script:**
+> "Historically, energy infrastructure operates on a rigid 'Hub-and-Spoke' model. A massive, centralized monopoly owns the power plant, leaving households with high electricity costs and retail investors completely locked out of high-yield infrastructure investments. Today, we are changing that by tokenizing physical solar panels and building a decentralized mesh network."
 
 ---
 
-## 💻 Phase 2: The Live Demo (3-5 mins)
-*Goal: Prove that the tech actually works, is visually powerful, and enforces our economic model on-chain.*
+## 🖥️ Slide 2: The Solution (Fractionalized Mesh Network)
+**Visual:** "After" architecture diagram—decentralized mesh web of household solar assets.
 
-**1. The "Aha!" Moment (Asset Command Center)**
-- Navigate to the **Asset Map** page.
-> *"Welcome to the Asset Command Center. What you're seeing is a real-time, high-density topology of our global infrastructure. Every node represents a physical asset—solar panels, wind turbines, agriculture—feeding telemetry directly to our decentralized network."*
-
-**2. Step 1: Deploy Secure IoT Device**
-- Fill out the form to deploy a new asset (e.g., "Western Cape Solar Array 5", $50,000 Value). Select the region and click **Onboard & Deploy**.
-> *"Let’s deploy a new asset in South Africa. As soon as the hardware comes online, its integrated TPM sensor performs a cryptographic handshake. The map dynamically zooms in and tracks it, proving to the network that the physical asset actually exists and is secure."*
-
-**3. Step 2: Connect to Network Web**
-- Click **Establish Web Link** to pool the asset.
-> *"But standalone assets carry high isolated risk. Here is our regional pooling solution in action. By establishing a web link, we programmatically lock this solar array into the regional liquidity pool. Watch the visual network topology update as the asset is securely aggregated."*
-
-**4. The 'Rogue' Defense in Action**
-- Point to the color-coded nodes on the map.
-> *"Our system continuously pings the TPM sensors. You'll see verified handshakes as green nodes, latency warnings in yellow, and compromised hardware locked down in red. If an asset is tampered with, the smart contract catches it right here and protects the retail investors."*
-
-**5. Step 3: Distribute Yield**
-- Click **Trigger $1,000 Yield** and watch the payout particles and financial breakdown.
-> *"Now for the most important part: Revenue. We'll simulate a physical revenue event. The smart contract instantly, trustlessly splits it exactly according to our business model: 70% to token holders, 20% to the operator, and 10% for Opex. You can see the funds programmatically settling on-chain in real-time."*
+**Speaker Script:**
+> "By fractionalizing the upfront capital costs of solar panels into ERC-3643 security tokens, we allow retail investors to fund the infrastructure. To ensure low-latency and near-zero cost micro-transactions for our energy yields, our entire protocol settles securely on **Optimism Sepolia**, aligning with the Ethereum L2 scaling solutions discussed in this course."
 
 ---
 
-## 🚀 Phase 3: Conclusion & Future Outlook (1-2 mins)
+## 🖥️ Slide 3: Compliance Without Compromise (Privacy)
+**Visual:** Identity architecture showing the Midnight Network zk-SNARKs barrier between the public ledger and private data.
 
-> "We have built a closed-loop system where physical reality dictates financial outcomes. By pooling assets, enforcing strict KYC, and using cryptographic hardware sensors, we can safely democratize access to South African infrastructure yields."
+**Speaker Script:**
+> "Compliance is mandatory, but privacy is a right. Instead of storing investor data on a public ledger, we integrated Zero-Knowledge proofs via the **Midnight Network**. This allows for 'Selective Disclosure'—investors can cryptographically prove they are KYC-compliant to our Identity Registry without ever broadcasting their underlying personal data."
 
-**Future Steps (If asked during Q&A):**
-- **Real Oracle Integration:** Replacing our mock backend with a decentralized Chainlink DON (Decentralized Oracle Network).
-- **Fiat Off-Ramps:** Integrating with local exchanges (like VALR or Luno) so operators can convert USDC directly into ZAR (South African Rand) to pay for local maintenance.
+---
+
+## 🖥️ Slide 4: The Business Model & Off-Chain Trust
+**Visual:** The Revenue Waterfall (75% Investor, 8% O&M, 7% Insurance, 5% Expansion, 5% Platform).
+
+**Speaker Script:**
+> "Let's talk about the hard math. A standard 450W panel installation costs **R6,750**. Based on real South African irradiance data of 5.5 sun hours, this EaaS model delivers a mathematically verifiable **20.7% net yield**. 
+> But as Lecture E07 famously taught us: *'Tokenisation is settlement, not liquidity.'* Tokenizing a solar panel doesn't magically clean it. 
+> To solve the physical-digital trust gap, every R100 generated is trustlessly split: **R75** goes to the investor. **R8** goes to our verified off-chain partner, **SunFix Logistics**, for maintenance. **R7** goes to insurance, and the remaining **R10** funds platform operations and future expansion. The tokenization handles the settlement; our off-chain partners handle the physical reality."
+
+---
+
+## 🖥️ Slide 5: Live Demonstration (The Core Pitch)
+**Visual:** Switch from slides to Screen Sharing the live application (`localhost:3000`).
+
+**Speaker Script:**
+*(Step 1: Navigate to the **Household Portal** - `localhost:3000/lessee`)*
+> *"Let's see this in action. For the non-technical household, there is no crypto jargon. They simply request an installation. Once active, they see their live consumption, their standard grid cost crossed out, and their massive savings using the Veridian rate."*
+
+*(Step 2: Navigate to the **Operations Portal** - `localhost:3000/admin`)*
+> *"Behind the scenes, SunFix Logistics uses our Operations Portal. As soon as the hardware comes online, its integrated TPM 2.0 sensor performs a cryptographic handshake. SunFix clicks 'Issue Asset' to deploy the ERC-3643 smart contract, generating an unforgeable 'Proof of Generation' receipt before the data ever hits our Chainlink oracle."*
+
+*(Step 3: Navigate to the **Investor Hub** - `localhost:3000/investor`)*
+> *"For the retail investor, the experience is seamless. They swap USDC for our compliant Veridian tokens. By locking their tokens in our **Staking Vault**, their yield jumps from 60% to 75%. Crucially, this locked stake gives them voting rights in the **DAO Contract** to govern the platform."*
+
+*(Step 4: Navigate to the **Command Center** - `localhost:3000/map`)*
+> *"Finally, the Command Center. What you're seeing is our live decentralized mesh network. Every node represents a physical solar array leased to a household, feeding real-time telemetry directly to the blockchain. We'll simulate a physical revenue event now. The smart contract instantly, trustlessly splits the funds exactly according to our business model."*
+
+---
+
+## 🖥️ Slide 6: Conclusion & Future Outlook
+**Visual:** Summary roadmap, project links, and contact/Q&A info.
+
+**Speaker Script:**
+> "With Veridian, we have built a closed-loop ecosystem where physical realities dictate financial outcomes. By leveraging Optimism for L2 settlement, zk-SNARKs for private KYC, and trusted off-chain partners like SunFix Logistics, we aren't just selling solar panels—we are decentralizing the future of energy yields. Thank you."

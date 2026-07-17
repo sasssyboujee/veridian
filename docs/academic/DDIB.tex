@@ -1,24 +1,39 @@
-\documentclass[12pt, a4paper]{article}
+\documentclass{Resources/bdlt-project}
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[margin=1in]{geometry}
-\usepackage{tabularx}
-\usepackage{booktabs}
-\usepackage{hyperref}
-\usepackage{parskip}
+% :::~ This is the configuration for the bibliography. DO NOT CHANGE
+\usepackage[
+    backend=biber,
+    style=authoryear,
+    natbib=false,
+    maxcitenames=2,
+    minbibnames=1, maxbibnames=99, 
+    url=false, 
+    doi=true,
+    ]{biblatex}
+    
+\addbibresource{thesis.bib}
 
-\title{Fractionalized Real-World Asset Escrow Architectures: Technical, Legal, and Economic Frameworks}
-\author{}
-\date{}
+\subjectarea{Deep Dive into Blockchain}
 
 \begin{document}
+\firstpage{1}
+
+\title{Veridian: Hardware-Attested Tokenization of Cash-Flowing Physical Infrastructure}
+\author{Kannan Sasinthiran, Wu Sichen Daniel, Altynai Idirisova, Hiba Chaabouni, Wang Shutong, Josephine Gwendolyn Scherler}
+\course{Group Number: 10}
+\school{UZH Summer School: Deep Dive into Blockchain (DDiB)}
+\date{16 July 2026}
 
 \maketitle
 
+\begin{abstract}
+Infrastructure generates predictable, inflation-resistant cash flows, but retail investors are historically locked out due to immense capital requirements, while equipment operators face crippling debt. We introduce Veridian, a decentralized protocol built on Optimism Sepolia that transforms physical asset tokenization into a compliant, self-executing EaaS (Equipment-as-a-Service) escrow. By integrating the ERC-3643 standard with Midnight Network's zk-SNARKs for private KYC, we ensure institutional-grade compliance without compromising investor privacy. Instead of trusting a centralized administrator, Veridian relies on Industrial IoT telemetry secured by TPM 2.0 hardware modules to trigger automated yield distributions via Chainlink. Our analysis proves the economic viability of this model in the solar sector, demonstrating how a 20.7\% yield can be trustlessly split to finance operations, insurance, and network expansion, decentralizing the future of energy yields.
+\end{abstract}
+
+\section{Introduction}
 The tokenization of Real-World Assets (RWAs) represents a profound paradigm shift in modern financial market infrastructure. By bridging the illiquidity of physical assets with the cryptographic finality, continuous trading capabilities, and programmable compliance of decentralized ledgers, RWA protocols are unlocking trillions of dollars in previously inaccessible economic value. This report provides an exhaustive, multi-disciplinary analysis of a purpose-built architecture for a fractionalized RWA escrow platform. By synthesizing technical infrastructure, smart contract engineering, dynamic economic models, and multi-jurisdictional legal frameworks, the analysis demonstrates how complex physical assets—ranging from agricultural equipment and heavy manufacturing machinery to commercial hospitality real estate—can be securely, legally, and profitably integrated into on-chain environments.
 
-\section{Technical Stack \& Infrastructure}
+\section{Theory}
 The successful deployment of a fractionalized RWA protocol necessitates a robust, multi-layered technical stack capable of handling secure user onboarding, massive off-chain data processing, and trustless on-chain execution. The architecture relies on a hybrid operational approach, utilizing traditional centralized infrastructure for computational efficiency alongside EVM-compatible decentralized networks for settlement and compliance enforcement.
 
 \subsection{Frontend and User Interface}
@@ -33,7 +48,7 @@ The primary function of this backend is to ingest, sanitize, and aggregate Indus
 
 To mitigate the critical risk of telemetry exploits—such as sensor spoofing or API tampering—the architecture strictly mandates the deployment of cryptographically secure hardware modules directly on the physical machinery. By utilizing a Hardware Root of Trust (HRoT), such as Trusted Platform Modules (TPM 2.0) or Trusted Execution Environments (Secure Enclaves), the physical asset cryptographically signs its operational data at the source. This creates an unforgeable ``Proof of Generation'' receipt before the telemetry ever reaches the SQL database, ensuring that the oracle network consumes inherently verifiable and tamper-proof physical metrics. 
 
-However, acknowledging the critical vulnerability that a sensor could be physically bypassed pre-hardware (e.g., muting a sensor to underreport usage and lower leasing bills), the protocol integrates a strict \textbf{Operator Staking Mechanism}. Lessees are required to lock a security deposit in stablecoins. If random physical audits or predictive AI models detect a variance exceeding 5\% between hardware-signed data and actual physical wear-and-tear, the protocol autonomously slashes the operator's stake to reimburse investors for the underreported yield. Python-based analytical models process this authenticated telemetry to calculate the exact utilization rate of the physical asset over a given billing cycle, culminating in the precise calculation of monthly yields.
+However, as established in academic discourse (Lecture E07), \textit{``Tokenisation is settlement, not liquidity''}. Tokenization alone does not guarantee the maintenance of the physical asset. Therefore, the protocol establishes strict off-chain trust assumptions by contracting verified physical operators, such as \textbf{SunFix Logistics}, to perform physical maintenance and random audits. Furthermore, the protocol integrates a strict \textbf{Operator Staking Mechanism}. Lessees are required to lock a security deposit in stablecoins. If these physical audits or predictive AI models detect a variance exceeding 5\% between hardware-signed data and actual physical wear-and-tear, the protocol autonomously slashes the operator's stake to reimburse investors for the underreported yield. Python-based analytical models process this authenticated telemetry to calculate the exact utilization rate of the physical asset over a given billing cycle, culminating in the precise calculation of monthly yields.
 
 \subsection{Decentralized Oracle Networks and Chainlink Integration}
 To securely bridge the off-chain Python/SQL data computation with the on-chain smart contracts without introducing centralized points of failure, the architecture employs decentralized oracle networks, specifically the Chainlink Runtime Environment (CRE) and Chainlink Functions.
@@ -41,7 +56,7 @@ To securely bridge the off-chain Python/SQL data computation with the on-chain s
 Chainlink Functions allows the protocol to execute custom JavaScript or Python code off-chain. The decentralized oracle network queries the SQL database via secure, authenticated APIs, computes the aggregate monthly yield, and reaches a decentralized consensus on the final value. The oracle network then delivers a cryptographically signed report to the EVM execution layer. The workflow utilizes cron triggers for automated, time-based settlements, entirely replacing manual intervention and ensuring that monthly yield payouts are triggered deterministically.
 
 \subsection{Blockchain Execution Layer}
-The execution layer operates on an EVM-compatible network, providing the decentralized consensus mechanism required for transaction settlement and smart contract state management. The choice of an EVM environment ensures broad interoperability with existing digital asset custody solutions, decentralized exchanges, and institutional infrastructure. While the Ethereum mainnet provides the highest degree of economic security, Layer-2 solutions (e.g., Arbitrum, Optimism) or specialized EVM subnets (e.g., Avalanche, Polygon) are frequently utilized to mitigate gas volatility and reduce the friction of high-frequency micro-distributions derived from continuous asset leasing.
+The execution layer operates on an EVM-compatible network, providing the decentralized consensus mechanism required for transaction settlement and smart contract state management. The choice of an EVM environment ensures broad interoperability with existing digital asset custody solutions, decentralized exchanges, and institutional infrastructure. While the Ethereum mainnet provides the highest degree of economic security, this protocol explicitly settles on \textbf{Optimism Sepolia}. Leveraging Optimism as an Ethereum Layer-2 scaling solution guarantees the low-latency and near-zero cost micro-transactions required for high-frequency energy yield distributions, seamlessly scaling RWA infrastructure.
 
 \subsection{Token Standard: ERC-3643 and ONCHAINID Integration}
 At the absolute core of the RWA protocol is the ERC-3643 token standard, originally developed under the T-REX (Token for Regulated Exchanges) protocol. The selection of this standard over alternatives represents a foundational architectural decision driven by regulatory necessity.
@@ -61,11 +76,11 @@ ERC-3643 & Permissioned global compliance, decentralized identity. & Dynamic eva
 \caption{Comparison of Token Standards}
 \end{table}
 
-Unlike the ubiquitous ERC-20 standard—which facilitates permissionless and pseudonymous transfers—ERC-3643 is explicitly designed to enforce regulatory compliance at the smart contract level. ERC-3643 achieves this through deep integration with ONCHAINID, a decentralized identity system based on the ERC-734 and ERC-735 standards.
+Unlike the ubiquitous ERC-20 standard—which facilitates permissionless and pseudonymous transfers—ERC-3643 is explicitly designed to enforce regulatory compliance at the smart contract level. ERC-3643 achieves this through deep integration with ONCHAINID, a decentralized identity system based on the ERC-734 and ERC-735 standards. To preserve investor privacy while satisfying these stringent KYC/AML requirements, the identity layer integrates Zero-Knowledge Proofs (zk-SNARKs) via networks such as the \textbf{Midnight Network}. This enables ``selective disclosure,'' allowing investors to cryptographically prove their identity credentials without broadcasting underlying personal data to the public ledger.
 
 When an investor initiates a token transfer, the ERC-3643 standard fundamentally alters the standard ERC-20 \texttt{transfer} and \texttt{transferFrom} functions. Before altering balances, the token contract queries an external Compliance module and an \texttt{IdentityRegistry} to execute a \texttt{canTransfer} pre-check. This check verifies that both the sender and the recipient possess a valid ONCHAINID containing the requisite claims, and that the transaction does not violate dynamic rules such as jurisdictional limits, maximum holder counts, or lock-up periods. If any condition fails, the transaction reverts autonomously, ensuring that the tokens never enter an unverified wallet.
 
-\section{Smart Contract Framework}
+\section{Methods}
 The protocol's on-chain logic is strictly compartmentalized into a suite of specialized, interoperable smart contracts. This modularity minimizes systemic risk, isolates business logic, and allows for precise upgradeability in response to evolving regulatory mandates.
 
 \subsection{Multi-Signature Escrow Contract}
@@ -91,12 +106,28 @@ Tokenizing an asset extends beyond mere ownership; it enables cryptographic mana
 
 However, delegating complex operational decisions (such as CNC machine maintenance schedules) to fractional retail owners creates severe risks of operational paralysis due to voter apathy and lack of industrial expertise. To mitigate this, the governance model enforces strict quorum requirements (e.g., $>10\%$ of circulating supply). Should quorum fail on critical operational votes, authority autonomously defaults to a pre-elected, professional Maintenance Council. This hybrid DAO structure democratizes ownership while mathematically preventing administrative gridlock.
 
+To prevent predatory behavior by yield-seeking investors who may vote to raise usage or energy prices excessively to increase their short-term payouts, the protocol implements an on-chain guardrail: the \textbf{Oracle-Based Dynamic Cap}. The pricing smart contract interfaces with a decentralized oracle network (e.g., a Chainlink Price Feed) to fetch the local utility grid's current rate ($P_{\text{grid}}$), such as the standard municipal Eskom electricity tariff. The contract strictly enforces a mathematical constraint on any proposed rate change submitted by the DAO:
+\begin{equation} \label{eqPriceCap}
+P_{\text{proposed}} \le 0.90 \times P_{\text{grid}}
+\end{equation}
+By hardcoding this dynamic ceiling directly into the execution logic, the protocol guarantees that households/lessees always receive a minimum 10\% discount compared to centralized utility monopolies. This structural alignment of interests protects the consumer from price gouging while reducing the risk of tenant default, thereby safeguarding the long-term utility and yield stability of the underlying physical asset.
+
 \subsection{Secondary Market Liquidity via AMMs}
 A critical challenge in traditional physical asset markets is illiquidity. However, deploying a bespoke Automated Market Maker (AMM) pool for every individual asset risks severe liquidity fragmentation. Highly niche tokens (e.g., a specific combine harvester) suffer from shallow liquidity, resulting in high price slippage and rendering the secondary market illiquid in practice.
 
 To resolve this, the architecture utilizes an \textbf{Index Pool and Tranche Architecture}. Rather than trading individual machine tokens, similar assets are pooled into unified indexes (e.g., a ``European Agricultural Fleet Yield Token''). Investors trade this unified token representing a basket of assets. This consolidates secondary market liquidity, significantly reduces slippage, and mathematically insulates investors from the localized downtime of a single physical machine. The AMM infrastructure pairs these index tokens with USDC, providing continuous, permissionless liquidity and immediate price discovery.
 
-\section{Economic \& Allocation Model}
+
+\subsection{Solar Asset Case Study \& Economic Model}
+Based on research into South African solar adoption, a standard 450W panel installation costs R6,750. Operating at an average of 5.5 sun hours per day, the system generates a mathematically verifiable net yield of 20.7\% under the EaaS model. The gross revenue is not captured as monolithic profit, but is trustlessly split according to a strict smart-contract waterfall:
+\begin{itemize}
+    \item 75\% distributed directly to Investor Yield.
+    \item 8\% allocated to Operations \& Maintenance (e.g., SunFix Logistics).
+    \item 7\% allocated to Insurance \& Reserve.
+    \item 5\% reinvested into the Expansion Fund.
+    \item 5\% retained for Platform Operations.
+\end{itemize}
+
 The economic sustainability of the RWA escrow protocol relies on a sophisticated fee structure that captures value from the physical asset's cash flows while heavily subsidizing network growth, security, and scalability. The protocol generates revenue by assessing a standard 7.5\% management fee on the gross leasing yield generated by the underlying physical asset before the net return is distributed to token holders.
 
 This protocol revenue is not captured as monolithic corporate profit; rather, it is algorithmically distributed through a strict, tiered growth allocation structure that aligns stakeholder incentives.
@@ -123,7 +154,7 @@ By pooling 4.5\% of the gross yield across the entire tokenized portfolio, the p
 
 Furthermore, this economic model transforms traditional CapEx into Operational Expenditure (OpEx) for the physical asset operators (the lessees). Through the Equipment-as-a-Service (EaaS) paradigm, operators are no longer required to secure crippling loans to purchase heavy machinery; instead, they pay a variable subscription or usage fee subsidized by the protocol's liquidity, democratizing access to industrial productivity.
 
-\section{Legal \& Regulatory Integration}
+\section{Results}
 Tokenizing real-world assets demands a meticulous alignment between the cryptographic reality of the blockchain and the jurisdictional reality of corporate, tax, and securities law. The protocol navigates this complex intersection by utilizing robust off-chain legal wrappers, strict securities classification compliance, and automated regulatory execution.
 
 \subsection{Off-Chain Asset Custody and SPV Structuring}
@@ -148,7 +179,6 @@ Taxation remains a critical variable in SPV structuring, particularly for yield 
 
 To resolve this friction, tax-structuring experts must obtain proactive tax rulings from the FTA prior to token issuance. Securing this ruling within a 90-day window is treated as a critical, binary pass/fail condition for the SPV's deployment. A tailored tax ruling can classify the token's yield structure in a way that qualifies for exemptions, or structure the instrument as a debt obligation to effectively optimize the tax burden on fractional holders while remaining fully compliant.
 
-\section\*{5. Industry-Specific Implementation Architectures}
 The abstraction of physical property rights into programmable ERC-3643 tokens allows the fractionalized RWA escrow architecture to be applied across highly diverse economic sectors. By leveraging IIoT telemetry and Equipment-as-a-Service (EaaS) models, the protocol dynamically adapts to the specific operational and revenue-generating characteristics of different asset classes.
 
 \subsection{Sector 1: Manufacturing and Heavy Industrial Machinery}
@@ -188,14 +218,13 @@ The Python backend interfaces directly with the hotel's existing Property Manage
 
 The RMS dynamically adjusts room pricing based on market demand to maximize RevPAR. The aggregated daily revenue flows into the SPV's accounts. At the end of the month, Chainlink Functions queries the PMS database to verify the gross revenue, triggers the deduction of operational expenses (cleaning, staffing, management) and the protocol's 7.5\% allocation, and distributes the net profit to the investors. The transparent nature of the blockchain allows token holders to view immutable, real-time dashboards of the hotel's RevPAR and occupancy data, eliminating the opaque accounting practices traditionally associated with private real estate syndication.
 
-\section{Comparative Ecosystem Context}
+\section{Discussion}
 To fully grasp the architectural decisions of this protocol, it is necessary to contextualize it within the broader landscape of RWA platforms.
 
 The economic and legal framework of this fractionalized escrow protocol synthesizes elements from leading RWA incumbents like Ondo Finance and Centrifuge. Ondo Finance primarily tokenizes highly liquid public securities (e.g., U.S. Treasuries) by wrapping them in SPVs. It operates with centralized compliance and targets stable, predictable yields, functioning essentially as an institutional asset wrapper. Centrifuge, alternatively, focuses on decentralized private credit. It allows businesses to tokenize receivables and loans into pools with senior and junior tranches, offering higher yields but exposing investors to the direct default risk of the underlying borrowers.
 
 The proposed fractionalized RWA escrow architecture sits strategically between these models. Like Ondo, it utilizes rigorous, centralized SPV structuring and ERC-3643 compliance to isolate legal risk and provide hard asset backing. Like Centrifuge, it taps into the higher-yield, higher-risk private market of machinery leasing and commercial real estate. However, by implementing IIoT EaaS telemetry via Chainlink and deploying the 7.5\% tiered allocation model, the protocol creates a unique, self-capitalizing loop that neither competitor currently possesses.
 
-\section{Critical Risk Metrics \& Public SLAs}
 To ensure the protocol remains robust against the inherent fragilities of tokenizing physical assets, the architecture strictly monitors five critical Red Flag metrics. If any of these thresholds are breached, automated circuit breakers or manual administrative halts are triggered:
 
 \begin{enumerate}
@@ -210,5 +239,11 @@ To ensure the protocol remains robust against the inherent fragilities of tokeni
 The fractionalized Real-World Asset escrow architecture detailed in this report represents a sophisticated convergence of multi-jurisdictional legal structuring, advanced smart contract engineering, and industrial IoT telemetry. By decisively leveraging the ERC-3643 token standard and the ONCHAINID protocol, the architecture ensures that secondary market liquidity does not come at the expense of regulatory compliance, maintaining rigorous AML/KYC enforcement directly at the execution layer.
 
 The integration of off-chain SQL databases with Chainlink oracle networks enables a seamless translation of physical productivity—whether measured in tractor operating hours, industrial press utilization, or hotel RevPAR—into deterministic, programmable on-chain yields settled securely via USDC. Furthermore, by embedding DeFi AMM liquidity pools and DAO governance structures directly into the asset's lifecycle, the protocol transforms from a static asset management platform into a dynamic, liquid, and democratically governed ecosystem. Combined with the 7.5\% tiered allocation structure and Opportunity Fund, it operates as a self-subsidizing capital engine capable of continually acquiring capital-intensive infrastructure. As global regulatory clarity improves, spearheaded by frameworks such as the Swiss DLT Act and the EU's MiCA regulation, this architecture is positioned to serve as the foundational infrastructure for the mass financialization, liquidity, and equitable distribution of the physical economy.
+
+\section{AUTHOR CONTRIBUTIONS}
+The following defines the contributions of the Veridian project team:
+Altynai Idirisova conceived and designed the project idea and business model. Hiba Chaabouni and Josephine Gwendolyn Scherler developed the economic models and mathematical yield calculations. Wang Shutong worked on the regulatory implications and securities compliance. Kannan Sasinthiran developed the technical implementation, smart contracts, and frontend architecture. Wu Sichen Daniel designed the visual assets and presentation narrative. All authors revised and accepted the final version of this document.
+
+\printbibliography
 
 \end{document}

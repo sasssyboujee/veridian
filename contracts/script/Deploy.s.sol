@@ -12,6 +12,7 @@ import "../src/token/RWAFactory.sol";
 import "../src/factory/GovernorFactory.sol";
 import "../src/factory/PoolFactory.sol";
 import "../src/market/RWALiquidityPool.sol";
+import "../src/yield/RWAVault.sol";
 
 contract DeployScript is Script {
     function run() external {
@@ -82,6 +83,10 @@ contract DeployScript is Script {
             
             // Add liquidity to properly update pool reserves
             RWALiquidityPool(poolAddr).addLiquidity(halfSupply, 500_000 * 10**18);
+            
+            // Deploy veRWA Vault for this asset
+            RWAVault vault = new RWAVault(assets[i].tokenAddress);
+            console.log("Vault deployed at:", address(vault));
         }
 
         vm.stopBroadcast();

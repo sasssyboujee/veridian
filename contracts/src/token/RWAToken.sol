@@ -18,6 +18,10 @@ contract RWAToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
     event AgentRemoved(address indexed agent);
     event AddressFrozen(address indexed user, bool status);
     event ForcedTransfer(address indexed from, address indexed to, uint256 amount);
+    event UsageRateUpdated(uint256 newRate);
+
+    // Usage Rate (e.g. cents per kWh)
+    uint256 public usageRate;
 
     modifier onlyAgent() {
         require(_agents[msg.sender] || msg.sender == owner(), "Not an agent");
@@ -45,6 +49,11 @@ contract RWAToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
     function setAddressFrozen(address user, bool status) external onlyAgent {
         _frozenAddresses[user] = status;
         emit AddressFrozen(user, status);
+    }
+
+    function updateUsageRate(uint256 newRate) external onlyOwner {
+        usageRate = newRate;
+        emit UsageRateUpdated(newRate);
     }
 
     function mint(address to, uint256 amount) external onlyAgent {
