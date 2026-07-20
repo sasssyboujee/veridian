@@ -59,7 +59,9 @@ export default function LesseeDashboard() {
         {step === 'request' && (
           <div style={{ animation: 'fadeIn 0.5s ease' }}>
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-              <Sun size={64} color="#76B900" style={{ margin: '0 auto 1rem' }} />
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                <Logo size={80} color="#76B900" />
+              </div>
               <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>Bypass the Grid.</h2>
               <p style={{ fontSize: '1.1rem', color: '#4b5563', maxWidth: '500px', margin: '0 auto' }}>
                 Join the Decentralized Energy Mesh. Get solar panels installed at zero upfront cost and pay only for the electricity you use, at a 20% discount.
