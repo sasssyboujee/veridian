@@ -6,20 +6,22 @@ This platform bridges physical machinery (e.g., solar generators, agricultural e
 
 ---
 
-## 💰 Economics & Liability Split
+## 💰 Economics & Yield Split
 
 ```mermaid
 flowchart TD
-    Asset[Real World Asset] -->|Lease Agreement, Usage Payment| Lessee[Household / End-User]
-    Asset -->|Legal Liability, Maintenance| SPV[Special Purpose Vehicle]
+    Asset[Real World Asset - Solar Panels] -->|Lease Agreement, EaaS Payment| Lessee[Household / Lessee]
+    Asset -->|Legal Liability, Maintenance| SPV[SunFix Logistics / Operations]
     Asset -->|Capital Investment, Hardware Cost| Investors[Token Holders]
 
-    Revenue[Usage Revenue] -->|15-25% Depreciation Reserve| Fund[Hardware Replacement Fund]
-    Revenue -->|10-15% Management & Insurance| SPV
-    Revenue -->|60-75% Net Yield| Investors
+    Revenue[Usage Revenue] -->|75% Net Yield| Investors
+    Revenue -->|8% Operations & Maintenance| SPV
+    Revenue -->|7% Insurance & Reserve| Insurance[Reserve Fund]
+    Revenue -->|5% Expansion Fund| Expansion[New Solar Projects]
+    Revenue -->|5% Platform Fee| Platform[Veridian Protocol]
 
-    Investors -->|Lock Tokens 1-10 Years| veRWA[Time-Locked Staking Vault]
-    veRWA -.->|Yield Multiplier| Investors
+    Investors -->|Time-Locked Staking Vault| veRWA[Staking Vault]
+    veRWA -.->|Yield Bracket Boost: 60% -> 75%| Investors
 ```
 
 ---
@@ -29,32 +31,39 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Investor
-    participant TPM as Physical Asset (TPM 2.0)
-    participant Backend as FastAPI Backend
-    participant DB as Supabase DB
-    participant CL as Chainlink Functions (DON)
-    participant SC as Smart Contracts (EVM)
+    
+    actor Lessee as Household
+    actor Admin as SunFix (Admin)
+    actor Investor as Retail Investor
+    
+    participant LP as Household Portal (/lessee)
+    participant AP as Operations Portal (/admin)
+    participant IP as Investor Hub (/investor)
+    participant MP as Command Center (/map)
+    
+    participant TPM as TPM 2.0 Hardware
+    participant Backend as FastAPI Oracle
+    participant SC as Smart Contracts (Optimism Sepolia)
 
-    Note over SC, Backend: 1. Tokenization & Onboarding
-    Investor->>SC: Complete KYC & Mint Identity Claim
-    SC->>SC: Register Identity in IdentityRegistry
+    Note over Lessee,SC: 1. Asset Provisioning & Issuance
+    Lessee->>LP: Request solar installation
+    Admin->>TPM: Install physical array & TPM 2.0 sensor
+    TPM-->>Backend: Hardware Root-of-Trust Handshake
+    Admin->>AP: Issue Asset (deploys ERC-3643 on-chain)
+    AP->>SC: Mint tokens representing Solar SPV
 
-    Note over TPM, DB: 2. Physical Asset Telemetry Ingestion
-    TPM->>Backend: POST /telemetry (Signed Payload: hours, utilization)
-    Backend->>Backend: Verify Hardware TPM Signature (ECDSA)
-    Backend->>DB: Log Verified Telemetry
+    Note over Investor,SC: 2. Compliant Onboarding & Staking
+    Investor->>IP: Connect Wallet & request KYC
+    IP->>SC: Submit Midnight zk-KYC Proof (Selective Disclosure)
+    Investor->>IP: Swap USDC for Veridian Tokens
+    Investor->>IP: Stake in Vault (boosts yield bracket to 75%)
 
-    Note over Backend, DB: 3. Off-Chain Yield Engine
-    Backend->>DB: Fetch Telemetry logs for Billing Cycle
-    Backend->>Backend: Calculate Gross Yield & Deduct 7.5% Tiered Fees
-    Backend->>DB: Store Net Yield Calculation & Token Snapshots
-
-    Note over CL, SC: 4. On-Chain Oracle Distribution
-    CL->>Backend: GET /yields/oracle/{asset_id}
-    Backend-->>CL: Return Deterministic Yield & Snapshot (ABI Encoded)
-    CL->>SC: Submit Report (onReport)
-    SC->>Investor: Transfer Stablecoin (proportional yield payout)
+    Note over TPM,SC: 3. Telemetry Ingestion & Yield Distribution
+    TPM->>Backend: Stream Generation Telemetry (signed ECDSA payload)
+    Backend->>MP: Render real-time telemetry nodes on Global Map
+    Lessee->>LP: Pay monthly bill based on consumption
+    Backend->>SC: Trigger automated contract yield distribution
+    SC->>SC: Execute Waterfall (75% Staked Investors, 8% O&M, 7% Ins., 5% Exp., 5% Plat.)
 ```
 
 ---
