@@ -23,13 +23,13 @@ sequenceDiagram
     
     %% Hardware & Off-chain
     box rgb(63, 63, 70) Off-Chain Infrastructure
-    participant TPM as TPM 2.0 Hardware
-    participant Oracle as Chainlink / FastAPI
+    participant TPM as TPM 2.0 Hardware (Simulated)
+    participant Oracle as Chainlink / FastAPI (Simulated)
     end
     
     %% Smart Contracts (Optimism Sepolia)
     box rgb(17, 24, 39) Optimism Sepolia (L2)
-    participant KYC as Midnight (zk-KYC)
+    participant KYC as Midnight (zk-KYC) (Proposed)
     participant Factory as RWAFactory
     participant ERC3643 as ERC-3643 Token
     participant DAO as DAO Governor

@@ -24,7 +24,7 @@ This is your master script for presenting to the judges. It is structured into 6
 **Visual:** Identity architecture showing the Midnight Network zk-SNARKs barrier between the public ledger and private data.
 
 **Speaker Script:**
-> "Compliance is mandatory, but privacy is a right. Instead of storing investor data on a public ledger, we integrated Zero-Knowledge proofs via the **Midnight Network**. This allows for 'Selective Disclosure'—investors can cryptographically prove they are KYC-compliant to our Identity Registry without ever broadcasting their underlying personal data."
+> "Compliance is mandatory, but privacy is a right. Instead of storing investor data on a public ledger, we proposed integrating Zero-Knowledge proofs via the **Midnight Network**. This will allow for 'Selective Disclosure'—investors can cryptographically prove they are KYC-compliant to our Identity Registry without ever broadcasting their underlying personal data."
 
 ---
 
@@ -46,13 +46,13 @@ This is your master script for presenting to the judges. It is structured into 6
 > *"Let's see this in action. For the non-technical household, there is no crypto jargon. They simply request an installation. Once active, they see their live consumption, their standard grid cost crossed out, and their massive savings using the Veridian rate."*
 
 *(Step 2: Navigate to the **Operations Portal** - `localhost:3000/admin`)*
-> *"Behind the scenes, SunFix Logistics uses our Operations Portal. As soon as the hardware comes online, its integrated TPM 2.0 sensor performs a cryptographic handshake. SunFix clicks 'Issue Asset' to deploy the ERC-3643 smart contract, generating an unforgeable 'Proof of Generation' receipt before the data ever hits our Chainlink oracle."*
+> *"Behind the scenes, SunFix Logistics uses our Operations Portal. As soon as the hardware comes online, its integrated TPM 2.0 sensor (which we are simulating for this demo) performs a cryptographic handshake. SunFix clicks 'Issue Asset' to deploy the ERC-3643 smart contract, generating an unforgeable 'Proof of Generation' receipt before the data ever hits our Chainlink oracle."*
 
 *(Step 3: Navigate to the **Investor Hub** - `localhost:3000/investor`)*
 > *"For the retail investor, the experience is seamless. They swap USDC for our compliant Veridian tokens. By locking their tokens in our **Staking Vault**, their yield jumps from 60% to 75%. Crucially, this locked stake gives them voting rights in the **DAO Contract** to govern the platform."*
 
 *(Step 4: Navigate to the **Command Center** - `localhost:3000/map`)*
-> *"Finally, the Command Center. What you're seeing is our live decentralized mesh network. Every node represents a physical solar array leased to a household, feeding real-time telemetry directly to the blockchain. We'll simulate a physical revenue event now. The smart contract instantly, trustlessly splits the funds exactly according to our business model."*
+> *"Finally, the Command Center. What you're seeing is our live decentralized mesh network. Every node represents a physical solar array leased to a household, feeding real-time telemetry directly to the blockchain. We'll trigger a simulated physical revenue event now (mocking the Chainlink delivery). The smart contract instantly, trustlessly splits the funds exactly according to our business model."*
 
 ---
 

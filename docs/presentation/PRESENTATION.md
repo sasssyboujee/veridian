@@ -25,12 +25,13 @@ The frontend application uses `wagmi` to connect to Ethereum nodes. We will conf
 ### 2. Smart Contract Deployments
 Prior to the presentation, the following auxiliary contracts will be deployed to UZHETH:
 *   **`MockUSDC.sol`**: An ERC-20 token simulating a fiat stablecoin, with a public `faucet()` function allowing anyone to mint `1,000` tokens.
-*   **`AutoKYC.sol`**: A simplified Claim Issuer contract that bypasses manual KYC verification for the sake of the demo, directly injecting an approved Identity Claim into the ERC-3643 `IdentityRegistry` for the caller.
+*   **`AutoKYC.sol` (Mocked)**: A simplified Claim Issuer contract that bypasses manual KYC verification for the sake of the demo, directly injecting an approved Identity Claim into the ERC-3643 `IdentityRegistry` for the caller.
 
 ### 3. Scalability & Production Readiness
 This architecture is deliberately designed to mimic a production environment:
 *   **Stablecoin Integration:** Real RWA protocols (like Ondo or Matrixdock) use stablecoins (USDC/USDT) rather than volatile native gas tokens (ETH) to price assets. By using `mUSDC`, the codebase remains identical to production—we merely swap the contract address from `mUSDC` to Circle's official `USDC` when going live.
 *   **ERC-3643 Integrity:** We do not disable the ERC-3643 transfer restrictions for the demo. The tokens remain heavily regulated. The `AutoKYC.sol` script acts as a proxy for what would normally be a backend service connected to a KYC provider like Sumsub. 
+*   **Limitations & Security Evaluation:** The current TPM service utilizes a development bypass allowing unverified payloads during testing. In production, this bypass must be strictly disabled. Additionally, the yield distributor contains production access-control limitations that require further security hardening to prevent unauthorized execution or manipulation of the distribution logic.
 
 ### 4. Core Concepts to Explain (SPVs & Multi-Sig Escrow)
 During the presentation, ensure the audience understands two foundational concepts that make this platform viable:

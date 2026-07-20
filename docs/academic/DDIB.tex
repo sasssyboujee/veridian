@@ -235,6 +235,18 @@ To ensure the protocol remains robust against the inherent fragilities of tokeni
     \item \textbf{Governance Quorum Apathy:} Voter participation in the asset-specific DAOs drops below 10\% of the circulating token supply for critical operational votes, triggering the Maintenance Council fallback.
 \end{enumerate}
 
+\subsection{Technical Limitations and Security Evaluation}
+In the current implementation of the Veridian protocol, several core components are in various states of development ranging from simulated to proposed, which introduces specific technical and security limitations:
+
+\begin{itemize}
+    \item \textbf{AutoKYC (Mocked):} The identity verification process currently utilizes a mocked \texttt{AutoKYC} smart contract. This simplified Claim Issuer bypasses manual KYC verification for demonstration purposes, directly injecting an approved Identity Claim. In a production environment, this must be replaced with a real backend service connected to a regulated KYC provider.
+    \item \textbf{Physical TPM Provisioning (Simulated):} The hardware root of trust is currently simulated. Furthermore, the current TPM service contains a development bypass, allowing unverified payloads during testing. Production deployment requires physical TPM 2.0 or Secure Enclave hardware directly integrated into the assets, and the development bypass must be strictly disabled.
+    \item \textbf{Midnight Integration (Proposed):} The integration of the Midnight Network for zk-SNARKs-based private KYC is currently proposed. While the architecture is designed to support selective disclosure and preserve privacy, the actual cryptographic barrier between the public ledger and private data is not yet fully implemented.
+    \item \textbf{Chainlink Delivery (Simulated):} The decentralized oracle delivery via Chainlink Functions is currently simulated for the demo. Yield distribution triggers are mocked off-chain rather than relying on a decentralized consensus network.
+\end{itemize}
+
+Additionally, the current yield distributor smart contract contains production access-control limitations that require further security hardening to prevent unauthorized execution or manipulation of the distribution logic.
+
 \section{Conclusion}
 The fractionalized Real-World Asset escrow architecture detailed in this report represents a sophisticated convergence of multi-jurisdictional legal structuring, advanced smart contract engineering, and industrial IoT telemetry. By decisively leveraging the ERC-3643 token standard and the ONCHAINID protocol, the architecture ensures that secondary market liquidity does not come at the expense of regulatory compliance, maintaining rigorous AML/KYC enforcement directly at the execution layer.
 
