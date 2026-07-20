@@ -59,7 +59,8 @@ export default function OperationsPortal() {
     if (!activeTelemetryAsset) return;
     setIsSlashing(true);
     try {
-      const res = await fetch(`http://localhost:8000/assets/${activeTelemetryAsset.id}`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/assets/${activeTelemetryAsset.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stake_slashed: true, operator_stake_balance: 0 }),
@@ -77,7 +78,8 @@ export default function OperationsPortal() {
     if (!activeTelemetryAsset) return;
     setIsFetchingOracle(true);
     try {
-      const res = await fetch(`http://localhost:8000/yields/oracle/${activeTelemetryAsset.id}?api_key=dev-oracle-key-123`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/yields/oracle/${activeTelemetryAsset.id}?api_key=dev-oracle-key-123`);
       if (res.ok) {
         const data = await res.json();
         setOraclePayload(JSON.stringify(data, null, 2));
@@ -191,7 +193,8 @@ export default function OperationsPortal() {
         }
       }
 
-      await fetch('http://localhost:8000/assets/', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      await fetch(`${API_URL}/assets/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
