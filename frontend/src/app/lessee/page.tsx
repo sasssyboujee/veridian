@@ -60,7 +60,7 @@ export default function LesseeDashboard() {
           <div style={{ animation: 'fadeIn 0.5s ease' }}>
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                <Logo size={80} color="#76B900" />
+                <img src="/custom_solar_icon.png" alt="Custom Solar Icon" width={80} height={80} style={{ objectFit: 'contain' }} />
               </div>
               <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '1rem' }}>Bypass the Grid.</h2>
               <p style={{ fontSize: '1.1rem', color: '#4b5563', maxWidth: '500px', margin: '0 auto' }}>
