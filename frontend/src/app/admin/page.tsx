@@ -34,6 +34,9 @@ export default function OperationsPortal() {
   });
 
   const activeAssets = assets?.filter(a => a.status === 'active') || [];
+  const solarAssets = activeAssets.filter(a => a.name.toLowerCase().includes('solar'));
+  const otherAssets = activeAssets.filter(a => !a.name.toLowerCase().includes('solar'));
+  const [isSolarPoolOpen, setIsSolarPoolOpen] = useState(true);
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<OnChainAsset | null>(null);
 
@@ -132,9 +135,11 @@ export default function OperationsPortal() {
 
   const getLocationForAsset = (name: string) => {
     const lower = name.toLowerCase();
-    if (lower.includes('solar')) return 'Nevada, US';
-    if (lower.includes('farm')) return 'Iowa, US';
-    return 'Global';
+    if (lower.includes('solar')) return 'Nevada, US (Solar Array)';
+    if (lower.includes('farm')) return 'Iowa, US (Agri-Farm)';
+    if (lower.includes('wind')) return 'North Sea, UK (Offshore Wind)';
+    if (lower.includes('ev') || lower.includes('charging')) return 'Berlin, DE (EV Grid)';
+    return 'Global Hardware';
   };
 
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
@@ -301,7 +306,38 @@ export default function OperationsPortal() {
                           <div style={{ padding: '1.5rem', color: 'var(--color-accent)' }}>No active assets.</div>
                         ) : (
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            {activeAssets?.map(asset => (
+                            {/* Solar Pool Accordion */}
+                            {solarAssets.length > 0 && (
+                              <div style={{ borderBottom: '1px solid var(--color-neutral)' }}>
+                                <div 
+                                  onClick={() => setIsSolarPoolOpen(!isSolarPoolOpen)} 
+                                  style={{ padding: '1rem 1.5rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)' }}
+                                >
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Sun size={16} color="var(--color-primary)" />
+                                    <span className="text-body" style={{ fontWeight: 600, color: 'var(--color-tertiary)' }}>Solar Asset Pool</span>
+                                  </div>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--color-accent)' }}>{isSolarPoolOpen ? '▼' : '▶'}</span>
+                                </div>
+                                {isSolarPoolOpen && (
+                                  <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                                    {solarAssets.map(asset => (
+                                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} style={{ padding: '1rem 1.5rem', paddingLeft: '3rem', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', backgroundColor: activeTelemetryAsset?.id === asset.id ? 'rgba(118,185,0,0.1)' : 'transparent', borderLeft: activeTelemetryAsset?.id === asset.id ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                          <div>
+                                            <div className="text-body" style={{ fontWeight: 700, color: activeTelemetryAsset?.id === asset.id ? 'var(--color-tertiary)' : 'var(--color-accent)', fontSize: '0.9rem' }}>{asset.symbol || asset.name}</div>
+                                            <div className="text-small" style={{ color: 'var(--color-accent)', marginTop: '4px', fontSize: '0.75rem' }}>{getLocationForAsset(asset.name)}</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Other Assets */}
+                            {otherAssets.map(asset => (
                               <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-neutral)', cursor: 'pointer', backgroundColor: activeTelemetryAsset?.id === asset.id ? 'rgba(118,185,0,0.1)' : 'transparent', borderLeft: activeTelemetryAsset?.id === asset.id ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <div style={{ color: activeTelemetryAsset?.id === asset.id ? 'var(--color-primary)' : 'var(--color-accent)' }}>{getIconForAsset(asset.name)}</div>
@@ -405,25 +441,32 @@ export default function OperationsPortal() {
               {/* Admin Controls Area */}
               <div style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <Card style={{ padding: '2rem', border: '1px dashed var(--color-error)' }}>
-                  <h3 className="text-h2" style={{ color: 'var(--color-error)', marginBottom: '1rem' }}>Simulate SLA Breach</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+                    <AlertCircle color="var(--color-error)" size={24} />
+                    <h3 className="text-h2" style={{ color: 'var(--color-error)' }}>Simulate Hardware Fault (TPM)</h3>
+                  </div>
                   <p className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                    Simulate a fraudulent telemetry report from the hardware (variance &gt; 5%). This instantly triggers the slashing conditions.
+                    Demo feature: Simulate a tampered or failing telemetry report from the physical asset's TPM 2.0 sensor (e.g. broken solar inverter). This immediately triggers the smart contract to slash the operator's maintenance bond.
                   </p>
-                  <Button variant="secondary" onClick={simulateTampering} disabled={isSlashing || activeTelemetryAsset?.stake_slashed || !activeTelemetryAsset} style={{ borderColor: 'var(--color-error)', color: 'var(--color-error)' }}>
-                    {isSlashing ? 'Slashing...' : 'Simulate Hardware Tampering'}
+                  <Button variant="secondary" onClick={simulateTampering} disabled={isSlashing || activeTelemetryAsset?.stake_slashed || !activeTelemetryAsset} style={{ width: '100%', borderColor: 'var(--color-error)', color: 'var(--color-error)' }}>
+                    {isSlashing ? 'Slashing...' : 'Simulate Fault & Slash Bond'}
                   </Button>
                 </Card>
 
                 <Card style={{ padding: '2rem', border: '1px dashed var(--color-primary)' }}>
-                  <h3 className="text-h2" style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>Decentralized Oracle Network</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+                    <Activity color="var(--color-primary)" size={24} />
+                    <h3 className="text-h2" style={{ color: 'var(--color-primary)' }}>Chainlink Oracle Payout</h3>
+                  </div>
                   <p className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                    Simulate Chainlink Functions querying the backend for the deterministic yield payload before pushing on-chain.
+                    Demo feature: Simulate the Decentralized Oracle Network (DON) fetching the verified deterministic yield payload from our backend to execute on-chain stablecoin payouts.
                   </p>
-                  <Button variant="primary" onClick={triggerOracle} disabled={isFetchingOracle || !activeTelemetryAsset}>
-                    {isFetchingOracle ? 'Fetching...' : 'Trigger Oracle Yield Payout'}
+                  <Button variant="primary" onClick={triggerOracle} disabled={isFetchingOracle || !activeTelemetryAsset} style={{ width: '100%' }}>
+                    {isFetchingOracle ? 'Fetching Oracle Payload...' : 'Trigger Oracle Yield Payout'}
                   </Button>
                   {oraclePayload && (
                     <div style={{ marginTop: '1.5rem', backgroundColor: '#0a0a0a', border: '1px solid var(--color-neutral)', borderRadius: '8px', padding: '1rem', overflowX: 'auto' }}>
+                      <div style={{ color: 'var(--color-primary)', fontSize: '0.7rem', marginBottom: '8px', borderBottom: '1px solid var(--color-neutral)', paddingBottom: '4px' }}>ORACLE PAYLOAD RESPONSE</div>
                       <pre style={{ color: 'var(--color-tertiary)', fontSize: '0.75rem', fontFamily: 'var(--font-tech)' }}>
                         {oraclePayload}
                       </pre>

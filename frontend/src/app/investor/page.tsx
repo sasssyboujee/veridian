@@ -198,22 +198,22 @@ export default function InvestorHub() {
       <div style={{ backgroundColor: 'var(--color-secondary)', borderBottom: '1px solid var(--color-neutral)', padding: '4rem 2rem 2rem 2rem' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
           <h1 className="text-h1 glow-text" style={{ marginBottom: '1.5rem' }}>
-            Investor Hub
+            Investor Portal
           </h1>
           <p className="text-body" style={{ color: 'var(--color-accent)', marginBottom: '2rem', margin: '0 auto', maxWidth: '600px' }}>
-            Access deterministic liquidity, lock tokens for enhanced staking yields, and actively govern the leasing economics of your fractionalized assets.
+            Buy tokenized asset shares, lock them to earn yield from real-world revenue, and vote on operational decisions — all on-chain.
           </p>
 
           {/* Internal Tabs */}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
             <Button variant={activeTab === 'market' ? 'primary' : 'secondary'} onClick={() => setActiveTab('market')}>
-              EXCHANGE
+              Trade
             </Button>
             <Button variant={activeTab === 'vault' ? 'primary' : 'secondary'} onClick={() => setActiveTab('vault')}>
-              STAKING VAULT
+              Earn
             </Button>
             <Button variant={activeTab === 'governance' ? 'primary' : 'secondary'} onClick={() => setActiveTab('governance')}>
-              GOVERNANCE
+              Vote
             </Button>
           </div>
         </div>
@@ -223,9 +223,19 @@ export default function InvestorHub() {
         <div style={{ maxWidth: '1000px', width: '100%' }}>
           
           {/* Universal Asset Selector for the Hub */}
+          {/* Getting Started Banner */}
+          {!address && (
+            <div style={{ backgroundColor: 'rgba(118, 185, 0, 0.08)', border: '1px solid var(--color-primary)', borderRadius: 'var(--rounded-base)', padding: '1rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Info size={20} color="var(--color-primary)" />
+              <span className="text-body" style={{ color: 'var(--color-accent)' }}>
+                <strong style={{ color: 'var(--color-primary)' }}>Getting Started:</strong> Connect your wallet (top right), then click <strong>"Get Demo USDC"</strong> to receive free test stablecoins you can use to buy asset tokens.
+              </span>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '0.5rem' }}>GLOBAL ASSET CONTEXT</span>
+              <span className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '0.5rem' }}>SELECT ASSET</span>
               <AssetSelector 
                 assets={assets}
                 selectedAsset={activeAsset}
@@ -240,17 +250,21 @@ export default function InvestorHub() {
           {activeTab === 'market' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', justifyItems: 'center' }}>
               <Card className="tech-border hover-lift" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                  <h2 className="text-h2" style={{ color: 'var(--color-tertiary)' }}>Execute Swap</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h2 className="text-h2" style={{ color: 'var(--color-tertiary)' }}>Swap Tokens</h2>
                   <Cpu size={24} color="var(--color-primary)" />
                 </div>
+
+                {/* Demo Faucet Button */}
+                <button onClick={buyMockUSDC} style={{ width: '100%', background: 'linear-gradient(135deg, rgba(118, 185, 0, 0.15), rgba(118, 185, 0, 0.05))', color: 'var(--color-primary)', border: '1px dashed var(--color-primary)', padding: '0.75rem 1rem', borderRadius: '12px', fontSize: '0.9rem', fontWeight: 600, cursor: 'pointer', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s ease' }}>
+                  Get 1,000 Demo USDC (Free)
+                </button>
                 
                 <div style={{ backgroundColor: 'rgba(46, 48, 51, 0.3)', padding: '1.25rem', borderRadius: '16px', marginBottom: '8px', border: '1px solid rgba(0, 128, 128, 0.2)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span className="text-small" style={{ color: 'var(--color-accent)' }}>INPUT</span>
+                    <span className="text-small" style={{ color: 'var(--color-accent)' }}>YOU PAY</span>
                     <span className="text-small" style={{ color: 'var(--color-accent)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      BAL: {formattedUSDC}
-                      <button onClick={buyMockUSDC} style={{ background: 'var(--color-primary)', color: 'var(--color-bg-dark)', border: 'none', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold', cursor: 'pointer' }}>+ GET</button>
+                      Balance: {formattedUSDC}
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
@@ -263,8 +277,8 @@ export default function InvestorHub() {
 
                 <div style={{ backgroundColor: 'rgba(46, 48, 51, 0.3)', padding: '1.25rem', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid rgba(0, 128, 128, 0.2)' }}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span className="text-small" style={{ color: 'var(--color-accent)' }}>OUTPUT</span>
-                    <span className="text-small" style={{ color: 'var(--color-accent)' }}>BAL: {formattedActiveBalance}</span>
+                    <span className="text-small" style={{ color: 'var(--color-accent)' }}>YOU RECEIVE</span>
+                    <span className="text-small" style={{ color: 'var(--color-accent)' }}>Balance: {formattedActiveBalance}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <input type="number" placeholder="0.0" value={receiveAmount} onChange={handleReceiveChange} style={{ flex: 1, fontSize: '2.5rem', color: 'var(--color-tertiary)', backgroundColor: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-tech)', minWidth: 0 }} />
@@ -275,7 +289,7 @@ export default function InvestorHub() {
                 </div>
 
                 <Button onClick={handleReviewSwap} disabled={!activeAsset || !payAmount} style={{ width: '100%', height: '3.5rem' }}>
-                  REVIEW SWAP
+                  {payAmount ? `Swap ${payAmount} USDC → ${receiveAmount} ${activeAsset?.symbol || 'RWA'}` : 'Enter an amount to swap'}
                 </Button>
               </Card>
             </div>
@@ -286,7 +300,7 @@ export default function InvestorHub() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 <Card style={{ padding: '2rem' }}>
-                  <h2 className="text-h2 glow-text" style={{ marginBottom: '1.5rem' }}>Stake Parameters</h2>
+                  <h2 className="text-h2 glow-text" style={{ marginBottom: '1.5rem' }}>Lock & Earn</h2>
                   
                   <div style={{ marginBottom: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -324,7 +338,7 @@ export default function InvestorHub() {
                   </div>
 
                   <Button onClick={handleStake} disabled={isStaking || !activeAsset || !stakeAmount} style={{ width: '100%', padding: '1rem', fontSize: '1.1rem' }}>
-                    {isStaking ? 'LOCKING ASSETS...' : 'CONFIRM TIME LOCK'}
+                    {isStaking ? 'Locking Assets...' : `Lock ${stakeAmount || '0'} ${activeAsset?.symbol || 'Tokens'} for ${lockDurationYears} Year${lockDurationYears > 1 ? 's' : ''}`}
                   </Button>
                 </Card>
               </div>
@@ -396,7 +410,7 @@ export default function InvestorHub() {
                     </div>
                     
                     <Button onClick={handleDelegate} style={{ width: '100%' }}>
-                      ACTIVATE VOTING POWER (DELEGATE)
+                      Activate My Voting Power
                     </Button>
                   </div>
                 ) : (
@@ -432,7 +446,7 @@ export default function InvestorHub() {
                     style={{ backgroundColor: 'var(--color-bg-dark)', color: 'var(--color-tertiary)', borderRadius: 'var(--rounded-base)', padding: '1rem', border: '1px solid var(--color-neutral)', fontFamily: 'var(--font-tech)', outline: 'none' }}
                   />
                   <Button onClick={handleCreateProposal} disabled={!proposalDescription || !newUsageRate || !activeAsset} style={{ width: '100%' }}>
-                    SUBMIT ON-CHAIN
+                    Submit Proposal On-Chain
                   </Button>
                 </div>
               </Card>
