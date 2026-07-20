@@ -227,7 +227,7 @@ export default function OperationsPortal() {
       <div style={{ backgroundColor: 'var(--color-secondary)', borderBottom: '1px solid var(--color-neutral)', padding: '4rem 2rem 2rem 2rem' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <img src="/veridian_logo_white.png" alt="Veridian Logo" width={80} height={80} />
+            <Logo size={80} color="#FFFFFF" />
           </div>
           <h1 className="text-h1 glow-text" style={{ marginBottom: '1.5rem' }}>
             Operations Portal
