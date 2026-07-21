@@ -5,10 +5,12 @@ import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
 import { WalletConnect } from './WalletConnect';
 import React, { useState, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Hide the global dark-mode navbar on the household portal
   if (pathname === '/lessee') {
@@ -62,7 +64,8 @@ export function Navbar() {
           </div>
         </Link>
         
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-8">
           {navItems.map((item) => {
             // Check if the current pathname matches or starts with the path
             const isActive = pathname === item.path || (item.path !== '/' && pathname?.startsWith(item.path));
@@ -85,7 +88,60 @@ export function Navbar() {
           
           <WalletConnect />
         </div>
+
+        {/* Mobile Nav Toggle */}
+        <div className="flex md:hidden">
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            style={{ background: 'none', border: 'none', color: 'var(--color-tertiary)', cursor: 'pointer' }}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden" style={{
+          position: 'absolute',
+          top: '64px',
+          left: 0,
+          right: 0,
+          backgroundColor: 'rgba(10, 10, 10, 0.98)',
+          backdropFilter: 'blur(16px)',
+          borderBottom: '1px solid var(--color-neutral)',
+          padding: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2rem',
+          alignItems: 'center',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+        }}>
+          {navItems.map((item) => {
+            const isActive = pathname === item.path || (item.path !== '/' && pathname?.startsWith(item.path));
+            return (
+              <Link 
+                key={item.path} 
+                href={item.path} 
+                onClick={() => setIsMobileMenuOpen(false)}
+                style={{ 
+                  color: isActive ? 'var(--color-primary)' : 'var(--color-tertiary)', 
+                  textDecoration: 'none',
+                  fontWeight: isActive ? 'bold' : 'normal',
+                  fontSize: '1.25rem',
+                  letterSpacing: '1px'
+                }} 
+              >
+                {item.name}
+              </Link>
+            );
+          })}
+          <div style={{ marginTop: '1rem' }}>
+            <WalletConnect />
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
