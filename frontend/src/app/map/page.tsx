@@ -98,7 +98,7 @@ export default function AssetMapPage() {
   // Demo Lifecycle States
   const [demoStep, setDemoStep] = useState<1 | 2 | 3>(1);
   const [createdAssetId, setCreatedAssetId] = useState<string | null>(null);
-  const [payoutLogs, setPayoutLogs] = useState<{holders: number, operator: number, opex: number}>({ holders: 0, operator: 0, opex: 0 });
+  const [payoutLogs, setPayoutLogs] = useState<{investors: number, opsMaint: number, insurance: number, expansion: number, platform: number}>({ investors: 0, opsMaint: 0, insurance: 0, expansion: 0, platform: 0 });
   const [showPayoutAnimation, setShowPayoutAnimation] = useState(false);
   const [clickedAssetId, setClickedAssetId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -187,9 +187,11 @@ export default function AssetMapPage() {
     const interval = setInterval(() => {
       count += 50;
       setPayoutLogs({
-        holders: count * 0.7,
-        operator: count * 0.2,
-        opex: count * 0.1
+        investors: count * 0.75,
+        opsMaint: count * 0.08,
+        insurance: count * 0.07,
+        expansion: count * 0.05,
+        platform: count * 0.05
       });
       if (count >= 1000) {
         clearInterval(interval);
@@ -202,7 +204,7 @@ export default function AssetMapPage() {
     setAssets(initialAssets);
     setCreatedAssetId(null);
     setDemoStep(1);
-    setPayoutLogs({ holders: 0, operator: 0, opex: 0 });
+    setPayoutLogs({ investors: 0, opsMaint: 0, insurance: 0, expansion: 0, platform: 0 });
     setShowPayoutAnimation(false);
     handleRegionChange('all');
   };
@@ -380,16 +382,24 @@ export default function AssetMapPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-neutral)', paddingBottom: '0.5rem' }}>
-                    <span className="text-sm text-gray-400">70% Token Holders:</span>
-                    <span className="text-body font-mono text-[#34d399]" style={{ fontWeight: 'bold' }}>${payoutLogs.holders.toFixed(2)}</span>
+                    <span className="text-sm text-gray-400">75% Investors:</span>
+                    <span className="text-body font-mono text-[#34d399]" style={{ fontWeight: 'bold' }}>${payoutLogs.investors.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-neutral)', paddingBottom: '0.5rem' }}>
-                    <span className="text-sm text-gray-400">20% Physical Operator:</span>
-                    <span className="text-body font-mono text-[#008080]" style={{ fontWeight: 'bold' }}>${payoutLogs.operator.toFixed(2)}</span>
+                    <span className="text-sm text-gray-400">8% Operations & Maint.:</span>
+                    <span className="text-body font-mono text-[#008080]" style={{ fontWeight: 'bold' }}>${payoutLogs.opsMaint.toFixed(2)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-neutral)', paddingBottom: '0.5rem' }}>
-                    <span className="text-sm text-gray-400">10% SPV Maint./Opex:</span>
-                    <span className="text-body font-mono text-gray-300" style={{ fontWeight: 'bold' }}>${payoutLogs.opex.toFixed(2)}</span>
+                    <span className="text-sm text-gray-400">7% Insurance & Reserves:</span>
+                    <span className="text-body font-mono text-gray-300" style={{ fontWeight: 'bold' }}>${payoutLogs.insurance.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-neutral)', paddingBottom: '0.5rem' }}>
+                    <span className="text-sm text-gray-400">5% Expansion:</span>
+                    <span className="text-body font-mono text-blue-400" style={{ fontWeight: 'bold' }}>${payoutLogs.expansion.toFixed(2)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--color-neutral)', paddingBottom: '0.5rem' }}>
+                    <span className="text-sm text-gray-400">5% Platform Operations:</span>
+                    <span className="text-body font-mono text-purple-400" style={{ fontWeight: 'bold' }}>${payoutLogs.platform.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
