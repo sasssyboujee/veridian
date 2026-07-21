@@ -195,7 +195,7 @@ export default function InvestorHub() {
     <div style={{ backgroundColor: 'var(--color-bg-dark)', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
       {/* Hero Section */}
-      <div style={{ backgroundColor: 'var(--color-secondary)', borderBottom: '1px solid var(--color-neutral)', padding: '4rem 2rem 2rem 2rem' }}>
+      <div className="investor-hero" style={{ backgroundColor: 'var(--color-secondary)', borderBottom: '1px solid var(--color-neutral)', padding: '4rem 2rem 2rem 2rem' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
           <h1 className="text-h1 glow-text" style={{ marginBottom: '1.5rem' }}>
             Investor Portal
@@ -219,13 +219,13 @@ export default function InvestorHub() {
         </div>
       </div>
 
-      <main style={{ flex: 1, padding: '4rem 2rem', display: 'flex', justifyContent: 'center' }}>
+      <main className="investor-main" style={{ flex: 1, padding: '4rem 2rem', display: 'flex', justifyContent: 'center' }}>
         <div style={{ maxWidth: '1000px', width: '100%' }}>
           
           {/* Universal Asset Selector for the Hub */}
           {/* Getting Started Banner */}
           {!address && (
-            <div style={{ backgroundColor: 'rgba(118, 185, 0, 0.08)', border: '1px solid var(--color-primary)', borderRadius: 'var(--rounded-base)', padding: '1rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="investor-info-banner" style={{ backgroundColor: 'rgba(118, 185, 0, 0.08)', border: '1px solid var(--color-primary)', borderRadius: 'var(--rounded-base)', padding: '1rem 1.5rem', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
               <Info size={20} color="var(--color-primary)" />
               <span className="text-body" style={{ color: 'var(--color-accent)' }}>
                 <strong style={{ color: 'var(--color-primary)' }}>Getting Started:</strong> Connect your wallet (top right), then click <strong>"Get Demo USDC"</strong> to receive free test stablecoins you can use to buy asset tokens.
@@ -268,7 +268,7 @@ export default function InvestorHub() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <input type="number" placeholder="0.0" value={payAmount} onChange={handlePayChange} style={{ flex: 1, fontSize: '2.5rem', color: 'var(--color-tertiary)', backgroundColor: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-tech)', minWidth: 0 }} />
+                    <input type="number" placeholder="0.0" value={payAmount} onChange={handlePayChange} className="swap-input" style={{ flex: 1, fontSize: '2.5rem', color: 'var(--color-tertiary)', backgroundColor: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-tech)', minWidth: 0 }} />
                     <div style={{ backgroundColor: 'rgba(0, 128, 128, 0.15)', padding: '10px 20px', borderRadius: '100px', display: 'flex', alignItems: 'center', border: '1px solid rgba(0, 128, 128, 0.4)' }}>
                       <span className="text-body" style={{ color: 'var(--color-tertiary)', fontWeight: 700 }}>USDC</span>
                     </div>
@@ -281,7 +281,7 @@ export default function InvestorHub() {
                     <span className="text-small" style={{ color: 'var(--color-accent)' }}>Balance: {formattedActiveBalance}</span>
                   </div>
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <input type="number" placeholder="0.0" value={receiveAmount} onChange={handleReceiveChange} style={{ flex: 1, fontSize: '2.5rem', color: 'var(--color-tertiary)', backgroundColor: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-tech)', minWidth: 0 }} />
+                    <input type="number" placeholder="0.0" value={receiveAmount} onChange={handleReceiveChange} className="swap-input" style={{ flex: 1, fontSize: '2.5rem', color: 'var(--color-tertiary)', backgroundColor: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-tech)', minWidth: 0 }} />
                     <div style={{ backgroundColor: 'rgba(0, 128, 128, 0.15)', padding: '10px 20px', borderRadius: '100px', display: 'flex', alignItems: 'center', border: '1px solid rgba(0, 128, 128, 0.4)' }}>
                       <span className="text-body" style={{ color: 'var(--color-tertiary)', fontWeight: 700 }}>{activeAsset?.symbol || 'RWA'}</span>
                     </div>

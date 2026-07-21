@@ -223,10 +223,10 @@ export default function AssetMapPage() {
         We'll keep the standard layout but add heavy backdrop filters to the cards.
       */}
 
-      <main style={{ padding: '3rem 1.5rem', maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
+      <main style={{ padding: '3rem 1.5rem', maxWidth: '1600px', margin: '0 auto', width: '100%' }} className="investor-main">
         
         {/* Header Block */}
-        <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }} className="map-header">
           <div>
             <h1 className="text-h1 glow-text">Asset Command Center</h1>
             <p className="text-body" style={{ color: 'var(--color-accent)', marginTop: '0.5rem' }}>
@@ -285,7 +285,7 @@ export default function AssetMapPage() {
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="map-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
                       <label className="text-xs tracking-widest text-[#008080] block mb-2" style={{ display: 'block', marginBottom: '8px' }}>ASSET TYPE</label>
                       <select 
@@ -318,7 +318,7 @@ export default function AssetMapPage() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div className="map-form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
                       <label className="text-xs tracking-widest text-[#008080] block mb-2" style={{ display: 'block', marginBottom: '8px' }}>CAPACITY</label>
                       <input 
@@ -440,9 +440,10 @@ export default function AssetMapPage() {
             
             {/* Filters Toggles (Glassmorphism) */}
             <div className="border border-[#008080]/30 rounded-xl p-4 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 flex gap-8 flex-wrap items-center relative z-10">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="map-filters" style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span className="text-xs tracking-widest text-[#008080]">ASSET FIELD:</span>
-                <div style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '8px' }}>
+                <div className="map-filter-buttons" style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '8px' }}>
                   {['all', 'solar', 'wind', 'agri', 'logistics'].map((t) => (
                     <button 
                       key={t}
@@ -467,9 +468,9 @@ export default function AssetMapPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span className="text-xs tracking-widest text-[#008080]">REGION:</span>
-                <div style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '8px' }}>
+                <div className="map-filter-buttons" style={{ display: 'flex', gap: '4px', backgroundColor: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '8px' }}>
                   {['all', 'ZA', 'NA', 'EU', 'AU'].map((r) => (
                     <button 
                       key={r}
@@ -496,7 +497,7 @@ export default function AssetMapPage() {
             </div>
 
             {/* Map Container */}
-            <div className="relative border border-[#008080]/30 rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,128,128,0.15)] bg-[#0A0D10]" style={{ height: '700px' }}>
+            <div className="map-container" style={{ height: '700px', position: 'relative', border: '1px solid rgba(0,128,128,0.3)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 0 50px rgba(0,128,128,0.15)', backgroundColor: '#0A0D10' }}>
               
               {/* Zoom Controls */}
               <div style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 20, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -665,9 +666,9 @@ export default function AssetMapPage() {
             </div>
 
             {/* Bottom Legend (TPM Status Based) */}
-            <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', marginTop: '0.5rem' }} className="text-small">
+            <div className="map-legend" style={{ display: 'flex', gap: '2rem', justifyContent: 'center', marginTop: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></div>
+                <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#22d3ee', boxShadow: '0 0 8px #22d3ee' }}></div>
                 <span style={{ color: 'var(--color-accent)', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '1px' }}>New Deployment</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
