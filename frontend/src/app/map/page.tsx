@@ -221,32 +221,41 @@ export default function AssetMapPage() {
     <div style={{ backgroundColor: 'var(--color-bg-dark)', minHeight: '100vh', color: 'var(--color-tertiary)' }}>
       <style>{`
         @keyframes dashFlow {
-          to { stroke-dashoffset: -20; }
+          from { stroke-dashoffset: 24; }
+          to { stroke-dashoffset: 0; }
         }
         .animated-link {
-          stroke-dasharray: 4 6;
-          animation: dashFlow 1s linear infinite;
+          stroke-dasharray: 2 8;
+          animation: dashFlow 0.8s linear infinite;
+          opacity: 0.7;
         }
         @keyframes particleExplode {
-          0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
-          100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+          0% { transform: translate(0, 0) scale(1); opacity: 1; }
+          100% { transform: translate(var(--tx), var(--ty)) scale(0.2); opacity: 0; }
         }
         .payout-particle {
-          animation: particleExplode 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+          animation: particleExplode 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
         }
         @keyframes shockwave {
-          0% { r: 5; opacity: 1; stroke-width: 4; }
-          100% { r: 60; opacity: 0; stroke-width: 0.5; }
+          0% { r: 5; opacity: 1; stroke-width: 2; }
+          100% { r: 100; opacity: 0; stroke-width: 0; }
         }
         .shockwave-ring {
-          animation: shockwave 2s ease-out infinite;
+          animation: shockwave 2.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
         }
         @keyframes pulseGlow {
-          0%, 100% { filter: drop-shadow(0 0 2px rgba(34, 211, 238, 0.5)); }
-          50% { filter: drop-shadow(0 0 12px rgba(34, 211, 238, 1)); }
+          0%, 100% { filter: drop-shadow(0 0 2px rgba(34, 211, 238, 0.4)); opacity: 0.8; }
+          50% { filter: drop-shadow(0 0 12px rgba(34, 211, 238, 1)); opacity: 1; }
         }
         .glowing-node {
-          animation: pulseGlow 1.5s infinite;
+          animation: pulseGlow 2.5s ease-in-out infinite;
+        }
+        @keyframes radarPing {
+          0% { r: 5; opacity: 0.8; stroke-width: 2; }
+          100% { r: 50; opacity: 0; stroke-width: 0.5; }
+        }
+        .radar-ping {
+          animation: radarPing 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
       `}</style>
       {/* 
@@ -636,7 +645,7 @@ export default function AssetMapPage() {
                       <Marker key={key} coordinates={pool.coordinates as [number, number]}>
                         
                         {/* Radar Pulses */}
-                        <circle r={25} fill="none" stroke="#008080" strokeWidth={1} className="animate-ping" style={{ animationDuration: '3s' }} vectorEffect="non-scaling-stroke" />
+                        <circle className="radar-ping" fill="none" stroke="#008080" vectorEffect="non-scaling-stroke" />
                         <circle r={15} fill="#008080" fillOpacity={0.2} stroke="#008080" strokeWidth={1} vectorEffect="non-scaling-stroke" />
                         
                         {/* Core Hub */}
