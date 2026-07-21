@@ -127,7 +127,7 @@ export default function LesseeDashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ marginBottom: '2rem' }}>
+            <div className="responsive-grid-2" style={{ marginBottom: '2rem' }}>
               <Card style={{ padding: '1.5rem', background: 'white', border: '1px solid #e5e7eb', color: '#1a1a1a', borderRadius: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', marginBottom: '1rem' }}>
                   <MapPin size={18} />

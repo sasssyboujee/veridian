@@ -297,7 +297,7 @@ export default function InvestorHub() {
 
           {/* VAULT TAB */}
           {activeTab === 'vault' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="responsive-grid-2">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 <Card style={{ padding: '2rem' }}>
                   <h2 className="text-h2 glow-text" style={{ marginBottom: '1.5rem' }}>Lock & Earn</h2>
@@ -350,7 +350,7 @@ export default function InvestorHub() {
                     <h2 className="text-h2 glow-text" style={{ color: 'var(--color-primary)' }}>Yield Projection</h2>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: '2rem' }}>
+                  <div className="responsive-grid-2" style={{ marginBottom: '2rem' }}>
                     <div style={{ padding: '1rem', backgroundColor: 'var(--color-bg-dark)', borderRadius: 'var(--rounded-base)', border: '1px solid var(--color-neutral)' }}>
                       <div className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '4px' }}>YIELD MULTIPLIER</div>
                       <div style={{ fontSize: '2rem', fontFamily: 'var(--font-tech)', color: 'var(--color-tertiary)', fontWeight: 700 }}>
@@ -384,7 +384,7 @@ export default function InvestorHub() {
 
           {/* GOVERNANCE TAB */}
           {activeTab === 'governance' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="responsive-grid-2">
               <Card style={{ padding: '2rem' }}>
                 <h2 className="text-h2 glow-text" style={{ marginBottom: '1.5rem' }}>Your Governance Profile</h2>
                 {activeAsset ? (

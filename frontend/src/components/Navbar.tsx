@@ -25,6 +25,11 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   // Determine if we're on the homepage
   const isHome = pathname === '/';
   
@@ -49,14 +54,14 @@ export function Navbar() {
         position: 'sticky', 
         top: 0, 
         zIndex: 100, 
-        height: '64px', // Standardized height
+        height: '64px',
         backgroundColor: navBackground,
         backdropFilter: 'blur(12px)',
         borderBottom: navBorder,
         transition: 'all 0.3s ease'
       }}
     >
-      <div className={isHome ? "container" : "container"} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%', maxWidth: '1200px', margin: '0 auto', padding: '0 32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '100%', maxWidth: '1200px', margin: '0 auto', padding: '0 1.25rem' }}>
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-tertiary)' }}>
           <Logo size={28} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
@@ -64,10 +69,9 @@ export function Navbar() {
           </div>
         </Link>
         
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
+        {/* Desktop Nav — hidden on mobile via CSS class */}
+        <div className="nav-desktop-links">
           {navItems.map((item) => {
-            // Check if the current pathname matches or starts with the path
             const isActive = pathname === item.path || (item.path !== '/' && pathname?.startsWith(item.path));
             return (
               <Link 
@@ -89,59 +93,39 @@ export function Navbar() {
           <WalletConnect />
         </div>
 
-        {/* Mobile Nav Toggle */}
-        <div className="flex md:hidden">
-          <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            style={{ background: 'none', border: 'none', color: 'var(--color-tertiary)', cursor: 'pointer' }}
-            aria-label="Toggle mobile menu"
-          >
-            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-          </button>
-        </div>
+        {/* Mobile Hamburger Toggle — visible on mobile via CSS class */}
+        <button 
+          className="nav-mobile-toggle"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle mobile menu"
+        >
+          {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden" style={{
-          position: 'absolute',
-          top: '64px',
-          left: 0,
-          right: 0,
-          backgroundColor: 'rgba(10, 10, 10, 0.98)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid var(--color-neutral)',
-          padding: '2rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2rem',
-          alignItems: 'center',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-        }}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.path || (item.path !== '/' && pathname?.startsWith(item.path));
-            return (
-              <Link 
-                key={item.path} 
-                href={item.path} 
-                onClick={() => setIsMobileMenuOpen(false)}
-                style={{ 
-                  color: isActive ? 'var(--color-primary)' : 'var(--color-tertiary)', 
-                  textDecoration: 'none',
-                  fontWeight: isActive ? 'bold' : 'normal',
-                  fontSize: '1.25rem',
-                  letterSpacing: '1px'
-                }} 
-              >
-                {item.name}
-              </Link>
-            );
-          })}
-          <div style={{ marginTop: '1rem' }}>
-            <WalletConnect />
-          </div>
+      {/* Mobile Menu Overlay — shown/hidden via .open class */}
+      <div className={`nav-mobile-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
+        {navItems.map((item) => {
+          const isActive = pathname === item.path || (item.path !== '/' && pathname?.startsWith(item.path));
+          return (
+            <Link 
+              key={item.path} 
+              href={item.path} 
+              onClick={() => setIsMobileMenuOpen(false)}
+              style={{ 
+                color: isActive ? 'var(--color-primary)' : 'var(--color-tertiary)', 
+                textDecoration: 'none',
+                fontWeight: isActive ? 'bold' : 'normal',
+              }} 
+            >
+              {item.name}
+            </Link>
+          );
+        })}
+        <div style={{ marginTop: '0.5rem' }}>
+          <WalletConnect />
         </div>
-      )}
+      </div>
     </nav>
   );
 }
