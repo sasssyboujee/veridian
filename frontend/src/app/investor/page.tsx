@@ -249,7 +249,7 @@ export default function InvestorHub() {
           {/* MARKET TAB */}
           {activeTab === 'market' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', justifyItems: 'center' }}>
-              <Card className="tech-border hover-lift" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
+              <Card className="tech-border hover-lift swap-card" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h2 className="text-h2" style={{ color: 'var(--color-tertiary)' }}>Swap Tokens</h2>
                   <Cpu size={24} color="var(--color-primary)" />
@@ -260,14 +260,14 @@ export default function InvestorHub() {
                   Get 1,000 Demo USDC (Free)
                 </button>
                 
-                <div style={{ backgroundColor: 'rgba(46, 48, 51, 0.3)', padding: '1.25rem', borderRadius: '16px', marginBottom: '8px', border: '1px solid rgba(0, 128, 128, 0.2)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div className="swap-container" style={{ backgroundColor: 'rgba(46, 48, 51, 0.3)', padding: '1.25rem', borderRadius: '16px', marginBottom: '8px', border: '1px solid rgba(0, 128, 128, 0.2)' }}>
+                  <div className="swap-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <span className="text-small" style={{ color: 'var(--color-accent)' }}>YOU PAY</span>
                     <span className="text-small" style={{ color: 'var(--color-accent)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       Balance: {formattedUSDC}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <div className="swap-input-row" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <input type="number" placeholder="0.0" value={payAmount} onChange={handlePayChange} className="swap-input" style={{ flex: 1, fontSize: '2.5rem', color: 'var(--color-tertiary)', backgroundColor: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-tech)', minWidth: 0 }} />
                     <div style={{ backgroundColor: 'rgba(0, 128, 128, 0.15)', padding: '10px 20px', borderRadius: '100px', display: 'flex', alignItems: 'center', border: '1px solid rgba(0, 128, 128, 0.4)' }}>
                       <span className="text-body" style={{ color: 'var(--color-tertiary)', fontWeight: 700 }}>USDC</span>
@@ -275,12 +275,12 @@ export default function InvestorHub() {
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: 'rgba(46, 48, 51, 0.3)', padding: '1.25rem', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid rgba(0, 128, 128, 0.2)' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div className="swap-container" style={{ backgroundColor: 'rgba(46, 48, 51, 0.3)', padding: '1.25rem', borderRadius: '16px', marginBottom: '1.5rem', border: '1px solid rgba(0, 128, 128, 0.2)' }}>
+                   <div className="swap-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <span className="text-small" style={{ color: 'var(--color-accent)' }}>YOU RECEIVE</span>
                     <span className="text-small" style={{ color: 'var(--color-accent)' }}>Balance: {formattedActiveBalance}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                  <div className="swap-input-row" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     <input type="number" placeholder="0.0" value={receiveAmount} onChange={handleReceiveChange} className="swap-input" style={{ flex: 1, fontSize: '2.5rem', color: 'var(--color-tertiary)', backgroundColor: 'transparent', border: 'none', outline: 'none', fontFamily: 'var(--font-tech)', minWidth: 0 }} />
                     <div style={{ backgroundColor: 'rgba(0, 128, 128, 0.15)', padding: '10px 20px', borderRadius: '100px', display: 'flex', alignItems: 'center', border: '1px solid rgba(0, 128, 128, 0.4)' }}>
                       <span className="text-body" style={{ color: 'var(--color-tertiary)', fontWeight: 700 }}>{activeAsset?.symbol || 'RWA'}</span>

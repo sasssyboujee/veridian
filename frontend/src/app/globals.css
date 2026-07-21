@@ -366,4 +366,33 @@ body {
     flex-direction: column;
     gap: 8px;
   }
+
+  .swap-card {
+    padding: 1.25rem !important;
+  }
+
+  .swap-container {
+    padding: 1rem !important;
+  }
+
+  .swap-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 4px;
+  }
+
+  .swap-input-row {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .swap-input-row input {
+    width: 100%;
+    text-align: right;
+  }
+
+  .swap-input-row > div {
+    align-self: flex-end;
+  }
 }
