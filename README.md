@@ -28,6 +28,8 @@ flowchart TD
 
 ## 🏗️ System Architecture
 
+*For a detailed execution flow and protocol lifecycle across all four portals, hardware, and smart contracts, see the full **[Architecture Maps](docs/technical/ARCHITECTURE_MAPS.md)**.*
+
 ```mermaid
 sequenceDiagram
     autonumber
@@ -81,8 +83,8 @@ Our project is a full-stack monorepo. Here is exactly where you can find all the
 *   **[`/docs`](file:///Users/sasi/escrow/docs)**: Documentation & Visuals
     *   **[`academic/`](file:///Users/sasi/escrow/docs/academic)**: LaTeX analysis (`DDIB.tex`), project analysis (`project_analysis.md`), and submission checklist.
     *   **[`presentation/`](file:///Users/sasi/escrow/docs/presentation)**: Slide deck structure and pitch script.
-    *   **[`technical/`](file:///Users/sasi/escrow/docs/technical)**: Architecture maps, UI/UX design language, and MCP specifications.
-*   **[`/final_submission`](file:///Users/sasi/escrow/final_submission)**: The final compiled artifacts required for grading.
+    *   **[`technical/`](docs/technical)**: Comprehensive execution flow ([`ARCHITECTURE_MAPS.md`](docs/technical/ARCHITECTURE_MAPS.md)), UI/UX design language, and MCP specifications.
+*   **[`/final_submission`](final_submission)**: The final compiled artifacts required for grading.
 
 ---
 
