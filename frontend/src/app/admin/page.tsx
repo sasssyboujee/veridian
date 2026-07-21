@@ -242,7 +242,7 @@ export default function OperationsPortal() {
           </p>
 
           {/* Internal Tabs */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem' }}>
             <Button variant={activeTab === 'dashboard' ? 'primary' : 'secondary'} onClick={() => setActiveTab('dashboard')}>
               LESSEE BILLING
             </Button>
@@ -270,7 +270,7 @@ export default function OperationsPortal() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                 <Card className="tech-border hover-lift" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <h3 className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '0.5rem' }}>TOTAL PORTFOLIO VALUE</h3>
                   <div style={{ fontSize: '3.5rem', fontWeight: 700, color: 'var(--color-primary)', fontFamily: 'var(--font-tech)', lineHeight: 1 }}>
@@ -289,17 +289,16 @@ export default function OperationsPortal() {
                 </Card>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left: Asset List & Telemetry */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                <div className="lg:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                   <Card className="tech-border" style={{ padding: '0', overflow: 'hidden' }}>
                     <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(0, 191, 255, 0.2)', backgroundColor: 'rgba(0, 191, 255, 0.05)' }}>
                       <h3 className="text-h2" style={{ color: 'var(--color-tertiary)' }}>Hardware Telemetry</h3>
                       <p className="text-small" style={{ color: 'var(--color-accent)', marginTop: '0.25rem' }}>Live readings from TPM 2.0 Secure Enclaves</p>
                     </div>
-                    
-                    <div style={{ display: 'flex', minHeight: '400px' }}>
-                      <div style={{ width: '35%', borderRight: '1px solid var(--color-neutral)', backgroundColor: 'rgba(255,255,255,0.02)' }}>
+                      <div className="flex flex-col md:flex-row min-h-[400px]">
+                        <div className="w-full md:w-[35%] border-b md:border-b-0 md:border-r border-neutral" style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
                         {assetsLoading ? (
                           <div style={{ padding: '1.5rem', color: 'var(--color-accent)' }}>Loading assets...</div>
                         ) : activeAssets?.length === 0 ? (
@@ -439,7 +438,7 @@ export default function OperationsPortal() {
               </div>
               
               {/* Admin Controls Area */}
-              <div style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 pt-12 border-t border-neutral">
                 <Card style={{ padding: '2rem', border: '1px dashed var(--color-error)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
                     <AlertCircle color="var(--color-error)" size={24} />
@@ -481,7 +480,7 @@ export default function OperationsPortal() {
 
           {/* ISSUE TAB */}
           {activeTab === 'issue' && (
-            <div style={{ display: 'flex', gap: '4rem' }}>
+            <div className="flex flex-col md:flex-row gap-8 md:gap-16">
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ marginBottom: '2rem' }}>
                   <span className="text-small" style={{ color: 'var(--color-primary)', letterSpacing: '2px' }}>ASSET ISSUANCE PROTOCOL</span>
@@ -541,7 +540,7 @@ export default function OperationsPortal() {
                         <input required placeholder="e.g. Solar Plant Alpha" value={name} onChange={(e) => setName(e.target.value)} style={{ backgroundColor: 'var(--color-bg-dark)', color: 'var(--color-tertiary)', borderRadius: 'var(--rounded-base)', padding: '1rem', border: '1px solid var(--color-neutral)', fontFamily: 'var(--font-tech)', outline: 'none', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.border = '1px solid var(--color-primary)'} onBlur={e => e.target.style.border = '1px solid var(--color-neutral)'} />
                       </div>
                       
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           <label className="text-small" style={{ color: 'var(--color-tertiary)', fontWeight: 600 }}>Token Symbol</label>
                           <input required placeholder="e.g. SPA" value={symbol} onChange={(e) => setSymbol(e.target.value)} style={{ backgroundColor: 'var(--color-bg-dark)', color: 'var(--color-tertiary)', borderRadius: 'var(--rounded-base)', padding: '1rem', border: '1px solid var(--color-neutral)', fontFamily: 'var(--font-tech)', outline: 'none', transition: 'border-color 0.2s' }} onFocus={e => e.target.style.border = '1px solid var(--color-primary)'} onBlur={e => e.target.style.border = '1px solid var(--color-neutral)'} />

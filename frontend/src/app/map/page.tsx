@@ -239,10 +239,10 @@ export default function AssetMapPage() {
           </Button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '2rem' }}>
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-8">
           
           {/* LEFT PANEL: Interactive Demo Lifecycle */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="lg:col-span-1" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             
             {/* Step Indicators (Glassmorphism) */}
             <div className="border border-[#008080]/30 rounded-xl p-6 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 flex flex-col gap-4">
@@ -436,7 +436,7 @@ export default function AssetMapPage() {
           </div>
 
           {/* RIGHT PANEL: Global Geographic Map Grid */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative' }}>
+          <div className="lg:col-span-3" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative' }}>
             
             {/* Filters Toggles (Glassmorphism) */}
             <div className="border border-[#008080]/30 rounded-xl p-4 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 flex gap-8 flex-wrap items-center relative z-10">
