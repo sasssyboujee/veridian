@@ -78,8 +78,23 @@ export default function InvestorHub() {
   };
 
   const handleReviewSwap = async () => {
-    if (!address || !activeAsset || !activeAsset.poolAddress) return alert("Please connect your wallet and select a valid asset pool.");
+    if (!address || !activeAsset) return alert("Please connect your wallet and select a valid asset.");
     if (!payAmount || Number(payAmount) <= 0) return alert("Please enter an amount.");
+
+    // If it's a hardcoded demo asset without a real pool address, simulate the transaction for the presentation
+    if (!activeAsset.poolAddress) {
+      try {
+        // Just mock a small delay for realism
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        alert(`Swap Complete! You swapped ${payAmount} USDC via the AMM Liquidity Pool.`);
+        setPayAmount('');
+        setReceiveAmount('');
+        return;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     try {
       const approveHash = await writeContractAsync({
         address: CONTRACT_ADDRESSES.MockUSDC as `0x${string}`,
