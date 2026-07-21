@@ -494,6 +494,7 @@ export default function AssetMapPage() {
                   ))}
                 </div>
               </div>
+              </div>
             </div>
 
             {/* Map Container */}
