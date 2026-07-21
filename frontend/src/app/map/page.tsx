@@ -219,6 +219,36 @@ export default function AssetMapPage() {
 
   return (
     <div style={{ backgroundColor: 'var(--color-bg-dark)', minHeight: '100vh', color: 'var(--color-tertiary)' }}>
+      <style>{`
+        @keyframes dashFlow {
+          to { stroke-dashoffset: -20; }
+        }
+        .animated-link {
+          stroke-dasharray: 4 6;
+          animation: dashFlow 1s linear infinite;
+        }
+        @keyframes particleExplode {
+          0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
+          100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+        .payout-particle {
+          animation: particleExplode 1.2s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+        }
+        @keyframes shockwave {
+          0% { r: 5; opacity: 1; stroke-width: 4; }
+          100% { r: 60; opacity: 0; stroke-width: 0.5; }
+        }
+        .shockwave-ring {
+          animation: shockwave 2s ease-out infinite;
+        }
+        @keyframes pulseGlow {
+          0%, 100% { filter: drop-shadow(0 0 2px rgba(34, 211, 238, 0.5)); }
+          50% { filter: drop-shadow(0 0 12px rgba(34, 211, 238, 1)); }
+        }
+        .glowing-node {
+          animation: pulseGlow 1.5s infinite;
+        }
+      `}</style>
       {/* 
         Glassmorphism hack for the background: 
         We rely on the map being large, but Next.js usually constrains main.
@@ -591,8 +621,7 @@ export default function AssetMapPage() {
                           to={poolCoords}
                           stroke="#22d3ee" // Cyan connection beam
                           strokeWidth={2}
-                          strokeDasharray="4 4"
-                          className="animate-pulse"
+                          className="animated-link"
                           style={{ vectorEffect: 'non-scaling-stroke' }}
                         />
                       );
@@ -613,22 +642,31 @@ export default function AssetMapPage() {
                         {/* Core Hub */}
                         <circle r={4} fill="#008080" />
                         
-                        {/* Payout Particles */}
+                        {/* Payout Particles (Super Amazing) */}
                         {showPayoutAnimation && (
                           <g>
-                            {[...Array(24)].map((_, i) => (
-                              <circle
-                                key={`p-${i}`}
-                                r={1.5}
-                                fill="#6EFA5F"
-                                className="animate-ping"
-                                style={{
-                                  animationDelay: `${Math.random() * 2}s`,
-                                  animationDuration: '1.5s',
-                                  vectorEffect: 'non-scaling-stroke'
-                                }}
-                              />
-                            ))}
+                            <circle className="shockwave-ring" fill="none" stroke="#34d399" vectorEffect="non-scaling-stroke" />
+                            <circle className="shockwave-ring" fill="none" stroke="#34d399" style={{ animationDelay: '0.8s' }} vectorEffect="non-scaling-stroke" />
+                            {[...Array(40)].map((_, i) => {
+                              const angle = (i * 9) * (Math.PI / 180);
+                              const distance = 30 + Math.random() * 60;
+                              const tx = Math.cos(angle) * distance;
+                              const ty = Math.sin(angle) * distance;
+                              return (
+                                <circle
+                                  key={`p-${i}`}
+                                  r={2.5}
+                                  fill="#6EFA5F"
+                                  className="payout-particle"
+                                  style={{
+                                    '--tx': `${tx}px`,
+                                    '--ty': `${ty}px`,
+                                    animationDelay: `${Math.random()}s`,
+                                    vectorEffect: 'non-scaling-stroke'
+                                  } as any}
+                                />
+                              );
+                            })}
                           </g>
                         )}
 
@@ -667,7 +705,7 @@ export default function AssetMapPage() {
                         onClick={() => setClickedAssetId(asset.id === clickedAssetId ? null : asset.id)}
                         style={{ default: { cursor: 'pointer', outline: 'none' }, hover: { cursor: 'pointer', outline: 'none' }, pressed: { cursor: 'pointer', outline: 'none' } }}
                       >
-                        <circle r={r} fill={fillColor} stroke={stroke} strokeWidth={0.5} className={asset.status === 'new' ? 'animate-bounce' : ''} />
+                        <circle r={r} fill={fillColor} stroke={stroke} strokeWidth={0.5} className={asset.status === 'new' ? 'animate-bounce glowing-node' : ''} />
                       </Marker>
                     );
                   })}
