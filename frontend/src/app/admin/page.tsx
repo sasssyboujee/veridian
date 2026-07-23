@@ -62,7 +62,7 @@ export default function OperationsPortal() {
     if (!activeTelemetryAsset) return;
     setIsSlashing(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/assets/${activeTelemetryAsset.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -81,7 +81,7 @@ export default function OperationsPortal() {
     if (!activeTelemetryAsset) return;
     setIsFetchingOracle(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
       const res = await fetch(`${API_URL}/yields/oracle/${activeTelemetryAsset.id}?api_key=dev-oracle-key-123`);
       if (res.ok) {
         const data = await res.json();
@@ -198,7 +198,7 @@ export default function OperationsPortal() {
         }
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
       await fetch(`${API_URL}/assets/`, {
         method: 'POST',
         headers: {

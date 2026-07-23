@@ -24,6 +24,7 @@ interface ChatMessage {
   content: string;
   chart?: ChartData;
   isError?: boolean;
+  suggestions?: string[];
 }
 
 const SUGGESTED_PROMPTS = [
@@ -53,7 +54,8 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
         {
           id: 'welcome',
           role: 'assistant',
-          content: `Hi! I am the Veridian AI Intelligence for ${asset.name}. I am connected directly to this asset's live telemetry stream and historical yield data on the blockchain. How can I help you analyze its performance today?`
+          content: `Hi! I am the Veridian AI Intelligence for ${asset.name}. I am connected directly to this asset's live telemetry stream and historical yield data on the blockchain. How can I help you analyze its performance today?`,
+          suggestions: SUGGESTED_PROMPTS
         }
       ]);
     } else {
@@ -76,7 +78,7 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:8000/chat/${asset.address}`, {
+      const response = await fetch(`http://127.0.0.1:8000/chat/${asset.address}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -95,7 +97,8 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: data.message,
-        chart: data.chart?.type !== 'none' ? data.chart : undefined
+        chart: data.chart?.type !== 'none' ? data.chart : undefined,
+        suggestions: data.suggestions
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -261,9 +264,9 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
           </div>
         ))}
 
-        {messages.length === 1 && !isLoading && (
+        {!isLoading && messages.length > 0 && messages[messages.length - 1].role === 'assistant' && messages[messages.length - 1].suggestions && (
           <div className="chat-msg" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px', animationDelay: '0.4s', justifyContent: 'flex-start' }}>
-            {SUGGESTED_PROMPTS.map((prompt, i) => (
+            {messages[messages.length - 1].suggestions?.map((prompt, i) => (
               <button
                 key={i}
                 onClick={() => handleSend(prompt)}

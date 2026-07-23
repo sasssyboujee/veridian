@@ -36,6 +36,7 @@ class ChartData(BaseModel):
 class ChatResponse(BaseModel):
     message: str = Field(description="The conversational text response.")
     chart: ChartData | None = Field(description="Optional chart data if visualization is relevant.", default=None)
+    suggestions: list[str] | None = Field(description="List of 2-3 suggested follow-up questions related to the user's inquiry.", default=None)
 
 
 @router.post("/{asset_address}", response_model=ChatResponse)
@@ -60,7 +61,8 @@ async def chat_with_asset(
                 ],
                 x_key="name",
                 y_key="value"
-            )
+            ),
+            suggestions=["Why was Day 2 lower?", "Show me yield data"]
         )
 
     if not genai:
@@ -122,6 +124,7 @@ async def chat_with_asset(
 You are helping an investor or lessee understand the performance of their physical asset.
 Use the following context to answer their question accurately.
 If they ask for visual data, try to extract relevant time-series data from the telemetry or yield history and return a chart.
+Also, provide 2-3 relevant follow-up questions in the `suggestions` field based on their initial request to guide the conversation.
 
 Asset Details:
 Asset: {asset_info}
@@ -169,7 +172,8 @@ Recent Yields:
                     ],
                     x_key="name",
                     y_key="value"
-                )
+                ),
+                suggestions=["What is the average yield?", "Why was day 2 output lower?"]
             )
         
         raise HTTPException(status_code=500, detail=f"LLM Error: {error_msg}")

@@ -1,8 +1,10 @@
 """Yield Calculation Engine.
 
-Applies the new Direct-to-Lessee fee structure:
-  - 15.0% Depreciation Reserve (Hardware Replacement Fund)
-  - 10.0% SPV Management & Insurance Fee
+Applies the 75/8/7/5/5 fee waterfall:
+  - 8.0% Operations & Maintenance (O&M)
+  - 7.0% Reserves/Insurance
+  - 5.0% Platform Fees
+  - 5.0% Expansion
   - Total Base Fees: 25.0%
   Note: Dynamic veRWA multipliers are applied at distribution.
 """
@@ -21,9 +23,17 @@ from app.models import Asset, BillingCycle, TelemetryLog, YieldCalculation
 logger = logging.getLogger(__name__)
 
 # Fee tier percentages (as Decimal for precision)
-DEPRECIATION_RESERVE_RATE = Decimal("0.150") # 15.0%
-SPV_MANAGEMENT_RATE = Decimal("0.100")       # 10.0%
-TOTAL_FEE_RATE = DEPRECIATION_RESERVE_RATE + SPV_MANAGEMENT_RATE  # 25.0%
+OM_RATE = Decimal("0.080")           # 8.0% Operations & Maintenance
+RESERVE_RATE = Decimal("0.070")      # 7.0% Reserves/Insurance
+PLATFORM_RATE = Decimal("0.050")     # 5.0% Platform Fees
+EXPANSION_RATE = Decimal("0.050")    # 5.0% Expansion
+
+# Map to legacy DB schema columns
+CHAMPIONS_FEE_RATE = OM_RATE + RESERVE_RATE  # 15.0% mapped to champions_fee
+CORE_FEE_RATE = PLATFORM_RATE                # 5.0% mapped to core_fee
+OPPORTUNITY_FEE_RATE = EXPANSION_RATE        # 5.0% mapped to opportunity_fee
+
+TOTAL_FEE_RATE = CHAMPIONS_FEE_RATE + CORE_FEE_RATE + OPPORTUNITY_FEE_RATE  # 25.0%
 
 # Base rate for Leasing revenue (configurable per asset via Governance)
 DEFAULT_USAGE_RATE = Decimal("0.16")  # USD per unit consumed (e.g., kWh)
@@ -39,7 +49,7 @@ async def calculate_yield_for_cycle(
 
     1. Sum operating hours from verified telemetry within the cycle period
     2. Compute gross yield = operating_hours × hourly_rate
-    3. Apply tiered fee structure (7.5% total)
+    3. Apply tiered fee structure (75/8/7/5/5 waterfall)
     4. Store and return the YieldCalculation record
 
     Args:
@@ -94,11 +104,12 @@ async def calculate_yield_for_cycle(
     # Note: We use operating_hours to represent 'units_consumed' in the DB schema for now.
     gross_yield = (total_hours * rate).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
 
-    # Apply new fee structure
-    depreciation_fee = (gross_yield * DEPRECIATION_RESERVE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
-    spv_fee = (gross_yield * SPV_MANAGEMENT_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
+    # Apply 75/8/7/5/5 fee structure mapped to DB schema
+    champions_fee = (gross_yield * CHAMPIONS_FEE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
+    core_fee = (gross_yield * CORE_FEE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
+    opportunity_fee = (gross_yield * OPPORTUNITY_FEE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
     
-    total_fee = depreciation_fee + spv_fee
+    total_fee = champions_fee + core_fee + opportunity_fee
     net_yield = gross_yield - total_fee
 
     # Create yield calculation record
@@ -106,9 +117,9 @@ async def calculate_yield_for_cycle(
         asset_id=cycle.asset_id,
         billing_cycle_id=cycle.id,
         gross_yield=gross_yield,
-        champions_fee=depreciation_fee, # Mapped to schema: Depreciation Reserve
-        core_fee=spv_fee,               # Mapped to schema: SPV Management
-        opportunity_fee=Decimal("0"),
+        champions_fee=champions_fee,      # 8% O&M + 7% Reserves
+        core_fee=core_fee,                # 5% Platform
+        opportunity_fee=opportunity_fee,  # 5% Expansion
         total_fee=total_fee,
         net_yield=net_yield,
         calculated_at=datetime.utcnow(),
@@ -139,14 +150,17 @@ def compute_fees(gross_yield: Decimal) -> dict:
     Returns:
         Dict with champions_fee, core_fee, opportunity_fee, total_fee, net_yield.
     """
-    depreciation_fee = (gross_yield * DEPRECIATION_RESERVE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
-    spv_fee = (gross_yield * SPV_MANAGEMENT_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
-    total_fee = depreciation_fee + spv_fee
+    champions_fee = (gross_yield * CHAMPIONS_FEE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
+    core_fee = (gross_yield * CORE_FEE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
+    opportunity_fee = (gross_yield * OPPORTUNITY_FEE_RATE).quantize(Decimal("0.000001"), rounding=ROUND_DOWN)
+    
+    total_fee = champions_fee + core_fee + opportunity_fee
     net_yield = gross_yield - total_fee
 
     return {
-        "depreciation_reserve": depreciation_fee,
-        "spv_management": spv_fee,
+        "om_and_reserves": champions_fee,
+        "platform_fee": core_fee,
+        "expansion_fee": opportunity_fee,
         "total_fee": total_fee,
         "net_yield": net_yield,
     }

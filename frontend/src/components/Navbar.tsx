@@ -12,11 +12,6 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Hide the global dark-mode navbar on the household portal
-  if (pathname === '/lessee') {
-    return null;
-  }
-
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -29,6 +24,11 @@ export function Navbar() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [pathname]);
+
+  // Hide the global dark-mode navbar on the household portal
+  if (pathname === '/lessee') {
+    return null;
+  }
 
   // Determine if we're on the homepage
   const isHome = pathname === '/';
