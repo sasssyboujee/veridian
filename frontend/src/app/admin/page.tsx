@@ -56,7 +56,28 @@ export default function OperationsPortal() {
   const queryClient = useQueryClient();
   const [oraclePayload, setOraclePayload] = useState<string | null>(null);
   const [isSlashing, setIsSlashing] = useState(false);
+  const [isSimulating, setIsSimulating] = useState(false);
   const [isFetchingOracle, setIsFetchingOracle] = useState(false);
+
+  const simulateMonth = async () => {
+    if (!activeTelemetryAsset) return;
+    setIsSimulating(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/telemetry/simulate/${activeTelemetryAsset.id}`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ['telemetrySummary'] });
+        queryClient.invalidateQueries({ queryKey: ['telemetryLogs'] });
+        queryClient.invalidateQueries({ queryKey: ['yields'] });
+        alert("Successfully simulated 1 month of telemetry and generated yield!");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    setIsSimulating(false);
+  };
 
   const simulateTampering = async () => {
     if (!activeTelemetryAsset) return;
@@ -118,6 +139,19 @@ export default function OperationsPortal() {
     enabled: !!activeTelemetryAsset,
     refetchInterval: 5000,
   });
+
+  const { data: yieldsData } = useQuery({
+    queryKey: ['yields', activeTelemetryAsset?.id],
+    queryFn: async () => {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const res = await fetch(`${API_URL}/yields/${activeTelemetryAsset!.id}`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!activeTelemetryAsset,
+  });
+
+  const latestYield = yieldsData?.[0];
 
   const totalHoldings = assets?.reduce((sum, asset) => sum + (Number(asset.total_token_supply || 0) * 100), 0) || 0;
   const recentLog = telemetryLogs?.[0];
@@ -438,7 +472,20 @@ export default function OperationsPortal() {
               </div>
               
               {/* Admin Controls Area */}
-              <div className="responsive-grid-2" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)' }}>
+              <div className="responsive-grid-3" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)' }}>
+                <Card style={{ padding: '2rem', border: '1px dashed var(--color-success)', backgroundColor: 'rgba(110,250,95,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+                    <Activity color="var(--color-success)" size={24} />
+                    <h3 className="text-h2" style={{ color: 'var(--color-success)' }}>Simulate Telemetry</h3>
+                  </div>
+                  <p className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                    Demo feature: Instantly generate 30 days of mock IoT hardware telemetry to simulate the asset operating normally and generating stablecoin yield.
+                  </p>
+                  <Button variant="secondary" onClick={simulateMonth} disabled={isSimulating || !activeTelemetryAsset} style={{ width: '100%', borderColor: 'var(--color-success)', color: 'var(--color-success)' }}>
+                    {isSimulating ? 'Simulating...' : 'Simulate 1 Month of Telemetry'}
+                  </Button>
+                </Card>
+
                 <Card style={{ padding: '2rem', border: '1px dashed var(--color-error)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
                     <AlertCircle color="var(--color-error)" size={24} />
@@ -473,6 +520,48 @@ export default function OperationsPortal() {
                   )}
                 </Card>
               </div>
+
+              {/* Yield Waterfall Visualization */}
+              {latestYield && (
+                <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--color-neutral)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+                    <Activity color="var(--color-tertiary)" size={24} />
+                    <h3 className="text-h2" style={{ color: 'var(--color-tertiary)' }}>Automated Yield Distribution (75/8/7/5/5 Waterfall)</h3>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-success)', backgroundColor: 'rgba(110,250,95,0.05)' }}>
+                      <div className="text-small" style={{ color: 'var(--color-success)', marginBottom: '8px', fontWeight: 600 }}>INVESTOR NET YIELD (75%)</div>
+                      <div style={{ fontSize: '2rem', color: 'var(--color-success)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
+                        ${Number(latestYield.net_yield).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
+                      </div>
+                    </Card>
+                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
+                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>O&M (8%)</div>
+                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
+                        ${(Number(latestYield.champions_fee) * (8/15)).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
+                      </div>
+                    </Card>
+                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
+                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>RESERVES (7%)</div>
+                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
+                        ${(Number(latestYield.champions_fee) * (7/15)).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
+                      </div>
+                    </Card>
+                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
+                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>EXPANSION FUND (5%)</div>
+                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
+                        ${Number(latestYield.opportunity_fee).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
+                      </div>
+                    </Card>
+                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
+                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>PLATFORM FEE (5%)</div>
+                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
+                        ${Number(latestYield.core_fee).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

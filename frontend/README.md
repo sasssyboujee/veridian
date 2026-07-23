@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Veridian - Frontend Applications
 
-## Getting Started
+This directory contains the Next.js (React) frontend for the Veridian Real-World Asset (RWA) Escrow Platform.
 
-First, run the development server:
+It is a unified monorepo housing four distinct portals for different stakeholders in the EaaS (Equipment-as-a-Service) lifecycle.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌟 Portals
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+*   **Command Center (`/map`)**: A cinematic, 3D global visualization of physical assets connecting to the network and routing yield. Used to demonstrate the high-level concept.
+*   **Investor Hub (`/investor`)**: A Web3 interface for retail and institutional investors. Integrates with MetaMask via `wagmi` to allow users to swap USDC for ERC-3643 compliant RWA tokens, and stake them in the `veRWA` vault for yield boosts.
+*   **Operations Admin (`/admin`)**: The internal portal for SunFix Logistics to monitor TPM 2.0 telemetry signatures, simulate hardware faults (bond slashing), and view the 75/8/7/5/5 Yield Waterfall breakdown based on real oracle data.
+*   **Home Portal (`/lessee`)**: The interface for the physical lessee (e.g., a homeowner with a leased solar panel) to view their power generation, grid savings, and pay their monthly utility bill.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+*   **Framework**: Next.js 14 (App Router)
+*   **Styling**: Vanilla CSS (`globals.css`) + Tailwind (for specific utility classes)
+*   **Web3 Integration**: `wagmi` + `viem` for robust wallet connection, contract reads/writes, and transaction waiting.
+*   **Charts & Visuals**: `react-simple-maps` for the global command center, custom SVG animations for yield particles.
 
-## Learn More
+## 🚀 Getting Started
 
-To learn more about Next.js, take a look at the following resources:
+1. Ensure the root `contracts` have been deployed to your local anvil node, and the `backend` FastAPI server is running.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔗 Architecture Link
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For a complete sequence diagram of how this frontend interacts with the smart contracts and the backend oracle, refer to the root `README.md` and `docs/technical/ARCHITECTURE_MAPS.md`.
