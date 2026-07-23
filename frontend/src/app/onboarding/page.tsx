@@ -48,7 +48,7 @@ export default function Onboarding() {
 
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
         <Card style={{ maxWidth: '480px', width: '100%', padding: '2rem' }}>
-          <h2 className="text-h1 glow-text" style={{ marginBottom: '16px' }}>Verify Identity</h2>
+          <h2 className="text-h1" style={{ marginBottom: '16px' }}>Verify Identity</h2>
           <p className="text-body" style={{ color: 'var(--color-accent)', marginBottom: '32px' }}>
             To hold or trade RWA tokens, you must be verified by a Trusted Issuer and bound to an ONCHAINID.
           </p>

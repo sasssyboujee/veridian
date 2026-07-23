@@ -234,7 +234,7 @@ export default function OperationsPortal() {
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
             <Logo size={80} color="#FFFFFF" />
           </div>
-          <h1 className="text-h1 glow-text" style={{ marginBottom: '1.5rem' }}>
+          <h1 className="text-h1" style={{ marginBottom: '1.5rem' }}>
             Operations Portal
           </h1>
           <p className="text-body" style={{ color: 'var(--color-accent)', marginBottom: '2rem', margin: '0 auto', maxWidth: '600px' }}>
@@ -355,7 +355,7 @@ export default function OperationsPortal() {
                         {activeTelemetryAsset ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <h4 className="text-h1 glow-text" style={{ color: 'var(--color-primary)', fontSize: '1.75rem' }}>{activeTelemetryAsset.name}</h4>
+                              <h4 className="text-h1" style={{ color: 'var(--color-primary)', fontSize: '1.75rem' }}>{activeTelemetryAsset.name}</h4>
                               {activeTelemetryAsset.stake_slashed ? (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-error)', backgroundColor: 'rgba(207,32,47,0.1)', padding: '6px 12px', borderRadius: '100px', border: '1px solid var(--color-error)' }}>
                                   <AlertCircle size={14} /> <span className="text-small">SLA BREACHED</span>
@@ -484,7 +484,7 @@ export default function OperationsPortal() {
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ marginBottom: '2rem' }}>
                   <span className="text-small" style={{ color: 'var(--color-primary)', letterSpacing: '2px' }}>ASSET ISSUANCE PROTOCOL</span>
-                  <h2 className="text-h1 glow-text" style={{ marginTop: '1rem', marginBottom: '1.5rem', fontSize: '2.5rem' }}>Tokenize New Assets</h2>
+                  <h2 className="text-h1" style={{ marginTop: '1rem', marginBottom: '1.5rem', fontSize: '2.5rem' }}>Tokenize New Assets</h2>
                   <p className="text-body" style={{ color: 'var(--color-accent)', lineHeight: 1.8 }}>
                     Deploy compliant, fully programmable security tokens tied to physical hardware. Our infrastructure automatically handles liquidity pools, on-chain governance, and KYC whitelists.
                   </p>

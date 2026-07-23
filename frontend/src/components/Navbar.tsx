@@ -65,7 +65,7 @@ export function Navbar() {
         <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-tertiary)' }}>
           <Logo size={28} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-            <span className="text-body glow-text" style={{ letterSpacing: '2px', fontWeight: 'bold' }}>VERIDIAN</span>
+            <span className="text-body font-bold tracking-widest">VERIDIAN</span>
           </div>
         </Link>
         
@@ -83,7 +83,7 @@ export function Navbar() {
                   fontWeight: isActive ? 'bold' : 'normal',
                   transition: 'color 0.2s ease'
                 }} 
-                className={isActive ? 'text-small glow-text' : 'text-small'}
+                className={isActive ? 'text-small font-bold text-[var(--color-primary)]' : 'text-small'}
               >
                 {item.name}
               </Link>

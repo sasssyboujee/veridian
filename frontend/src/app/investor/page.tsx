@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShieldCheck, Lock, Activity, Percent, Info, Network, Cpu, AlertTriangle, Users, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Lock, Activity, Percent, Info, Network, Cpu, AlertTriangle, Users, CheckCircle2, ArrowLeftRight, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAccount, useWriteContract, useReadContract, usePublicClient } from 'wagmi';
@@ -9,10 +9,11 @@ import { parseEther, formatEther, encodeFunctionData } from 'viem';
 import { MockUSDC_ABI, RWAToken_ABI, RWALiquidityPool_ABI, RWAGovernor_ABI, CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useDeployedAssets } from '@/hooks/useDeployedAssets';
 import { AssetSelector } from '@/components/ui/AssetSelector';
+import { AssetChat } from '@/components/AssetChat';
 import { OnChainAsset } from '@/types/asset';
 
 export default function InvestorHub() {
-  const [activeTab, setActiveTab] = useState<'market' | 'vault' | 'governance'>('market');
+  const [activeTab, setActiveTab] = useState<'market' | 'vault' | 'governance' | 'chat'>('market');
   
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
@@ -212,7 +213,7 @@ export default function InvestorHub() {
       {/* Hero Section */}
       <div className="investor-hero" style={{ backgroundColor: 'var(--color-secondary)', borderBottom: '1px solid var(--color-neutral)', padding: '4rem 2rem 2rem 2rem' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-          <h1 className="text-h1 glow-text" style={{ marginBottom: '1.5rem' }}>
+          <h1 className="text-h1" style={{ marginBottom: '1.5rem' }}>
             Investor Portal
           </h1>
           <p className="text-body" style={{ color: 'var(--color-accent)', marginBottom: '2rem', margin: '0 auto', maxWidth: '600px' }}>
@@ -221,14 +222,17 @@ export default function InvestorHub() {
 
           {/* Internal Tabs */}
           <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '1rem', marginTop: '2rem' }}>
-            <Button variant={activeTab === 'market' ? 'primary' : 'secondary'} onClick={() => setActiveTab('market')}>
-              Trade
+            <Button variant={activeTab === 'market' ? 'primary' : 'secondary'} onClick={() => setActiveTab('market')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ArrowLeftRight size={18} strokeWidth={2} /> Trade
             </Button>
-            <Button variant={activeTab === 'vault' ? 'primary' : 'secondary'} onClick={() => setActiveTab('vault')}>
-              Earn
+            <Button variant={activeTab === 'vault' ? 'primary' : 'secondary'} onClick={() => setActiveTab('vault')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TrendingUp size={18} strokeWidth={2} /> Earn
             </Button>
-            <Button variant={activeTab === 'governance' ? 'primary' : 'secondary'} onClick={() => setActiveTab('governance')}>
-              Vote
+            <Button variant={activeTab === 'governance' ? 'primary' : 'secondary'} onClick={() => setActiveTab('governance')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldCheck size={18} strokeWidth={2} /> Vote
+            </Button>
+            <Button variant={activeTab === 'chat' ? 'primary' : 'secondary'} onClick={() => setActiveTab('chat')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={18} strokeWidth={2} /> AI Assistant
             </Button>
           </div>
         </div>
@@ -248,7 +252,7 @@ export default function InvestorHub() {
             </div>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '3rem', position: 'relative', zIndex: 10, marginTop: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <span className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '0.5rem' }}>SELECT ASSET</span>
               <AssetSelector 
@@ -315,7 +319,7 @@ export default function InvestorHub() {
             <div className="responsive-grid-2">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 <Card style={{ padding: '2rem' }}>
-                  <h2 className="text-h2 glow-text" style={{ marginBottom: '1.5rem' }}>Lock & Earn</h2>
+                  <h2 className="text-h2" style={{ marginBottom: '1.5rem' }}>Lock & Earn</h2>
                   
                   <div style={{ marginBottom: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -362,7 +366,7 @@ export default function InvestorHub() {
                 <Card style={{ padding: '2rem', border: '1px solid var(--color-primary)', backgroundColor: 'rgba(118, 185, 0, 0.05)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1.5rem' }}>
                     <Percent size={20} color="var(--color-primary)" />
-                    <h2 className="text-h2 glow-text" style={{ color: 'var(--color-primary)' }}>Yield Projection</h2>
+                    <h2 className="text-h2" style={{ color: 'var(--color-primary)' }}>Yield Projection</h2>
                   </div>
 
                   <div className="responsive-grid-2" style={{ marginBottom: '2rem' }}>
@@ -401,7 +405,7 @@ export default function InvestorHub() {
           {activeTab === 'governance' && (
             <div className="responsive-grid-2">
               <Card style={{ padding: '2rem' }}>
-                <h2 className="text-h2 glow-text" style={{ marginBottom: '1.5rem' }}>Your Governance Profile</h2>
+                <h2 className="text-h2" style={{ marginBottom: '1.5rem' }}>Your Governance Profile</h2>
                 {activeAsset ? (
                   <div style={{ backgroundColor: 'var(--color-bg-dark)', padding: '1.5rem', borderRadius: 'var(--rounded-base)', border: '1px solid var(--color-neutral)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px dashed var(--color-neutral)' }}>
@@ -435,7 +439,7 @@ export default function InvestorHub() {
 
               <Card style={{ padding: '2rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                  <h2 className="text-h2 glow-text">Submit Rate Proposal</h2>
+                  <h2 className="text-h2">Submit Rate Proposal</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(118, 185, 0, 0.1)', padding: '0.25rem 0.75rem', borderRadius: 'var(--rounded-base)', border: '1px solid var(--color-primary)' }}>
                     <CheckCircle2 size={14} color="var(--color-primary)" />
                     <span className="text-small" style={{ color: 'var(--color-primary)' }}>51% QUORUM ENFORCED</span>
@@ -465,6 +469,19 @@ export default function InvestorHub() {
                   </Button>
                 </div>
               </Card>
+            </div>
+          )}
+
+          {/* CHAT TAB */}
+          {activeTab === 'chat' && (
+            <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ textAlign: 'center', padding: '0 1rem' }}>
+                <h2 className="text-h2" style={{ marginBottom: '1rem' }}>AI Asset Intelligence</h2>
+                <p className="text-body" style={{ color: 'var(--color-accent)', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+                  Interact with our AI Assistant to analyze live telemetry and historical yield data. The AI automatically detects your currently selected asset (<strong style={{ color: 'var(--color-primary)' }}>{activeAsset?.name || 'None'}</strong>) to provide contextual insights and real-time interactive charts.
+                </p>
+              </div>
+              <AssetChat asset={activeAsset} />
             </div>
           )}
 

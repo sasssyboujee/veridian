@@ -47,10 +47,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from app.routers import assets, telemetry, yields, chat
+
 # Register routers
 app.include_router(assets.router)
 app.include_router(telemetry.router)
 app.include_router(yields.router)
+app.include_router(chat.router)
 
 
 @app.get("/", tags=["Health"])

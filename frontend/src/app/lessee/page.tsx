@@ -6,11 +6,16 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Home, Sun, Zap, CheckCircle2, MapPin, Wallet, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useDeployedAssets } from '@/hooks/useDeployedAssets';
+import { AssetChat } from '@/components/AssetChat';
 
 export default function LesseeDashboard() {
   const [step, setStep] = useState<'request' | 'pending' | 'active'>('request');
   const [isPaying, setIsPaying] = useState(false);
   const [hasPaid, setHasPaid] = useState(false);
+  
+  const { assets } = useDeployedAssets();
+  const activeAsset = assets.length > 0 ? assets[0] : null;
 
   // Mock data based on Hiba's research
   const generatedKWh = 178;
@@ -199,6 +204,24 @@ export default function LesseeDashboard() {
                     )}
                   </button>
                 )}
+              </div>
+            </Card>
+
+            <Card style={{ padding: '2rem', background: '#1a1a1a', border: '1px solid #374151', borderRadius: '16px', marginTop: '2rem' }}>
+              <div style={{ marginBottom: '1.5rem', color: 'white' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Zap size={20} color="#76B900" /> AI Energy Assistant
+                </h3>
+                <p style={{ color: '#9ca3af', fontSize: '0.9rem', marginTop: '0.25rem' }}>Ask me about your power usage and tips to save.</p>
+              </div>
+              <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem', padding: '1rem' }}>
+                <div style={{ textAlign: 'center', padding: '0 1rem' }}>
+                  <h2 className="text-h2" style={{ marginBottom: '1rem' }}>AI Asset Intelligence</h2>
+                  <p className="text-body" style={{ color: 'var(--color-accent)', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+                    Interact with our AI Assistant to analyze live telemetry and historical yield data. The AI automatically detects your currently selected asset (<strong style={{ color: 'var(--color-primary)' }}>{activeAsset?.name || 'None'}</strong>) to provide contextual insights and real-time interactive charts.
+                  </p>
+                </div>
+                <AssetChat asset={activeAsset} />
               </div>
             </Card>
 

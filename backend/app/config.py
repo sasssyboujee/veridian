@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     # Oracle / Chainlink
     oracle_api_key: str = ""
+    gemini_api_key: str = ""
 
     # Contract Addresses
     rwa_token_address: str = ""

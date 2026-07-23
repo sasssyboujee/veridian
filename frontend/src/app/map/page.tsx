@@ -269,7 +269,7 @@ export default function AssetMapPage() {
         {/* Header Block */}
         <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }} className="map-header">
           <div>
-            <h1 className="text-h1 glow-text">Asset Command Center</h1>
+            <h1 className="text-h1">Asset Command Center</h1>
             <p className="text-body" style={{ color: 'var(--color-accent)', marginTop: '0.5rem' }}>
               High-Density Topology, TPM security monitoring, and dynamic spatial yields.
             </p>
@@ -286,7 +286,7 @@ export default function AssetMapPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             
             {/* Step Indicators (Glassmorphism) */}
-            <div className="border border-[#008080]/30 rounded-xl p-6 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 flex flex-col gap-4">
+            <div className="border border-[rgba(255,255,255,0.1)] rounded-xl p-6 bg-[#1A1A1A] flex flex-col gap-4">
               <h3 className="text-xs tracking-widest uppercase text-[#008080] font-bold">LIFECYCLE PROGRESS</h3>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -307,7 +307,7 @@ export default function AssetMapPage() {
 
             {/* Stage 1 Form (Glassmorphism) */}
             {demoStep === 1 && (
-              <div className="border border-[#008080]/30 rounded-xl p-6 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60">
+              <div className="border border-[rgba(255,255,255,0.1)] rounded-xl p-6 bg-[#1A1A1A]">
                 <h2 className="text-lg font-bold mb-6 flex items-center gap-2 text-white">
                   <Plus size={20} className="text-[#008080]" />
                   1. Deploy IoT Hardware
@@ -392,7 +392,7 @@ export default function AssetMapPage() {
 
             {/* Stage 2 Action */}
             {demoStep === 2 && (
-              <div className="border border-[#008080]/30 rounded-xl p-6 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 animate-fade-in">
+              <div className="border border-[rgba(255,255,255,0.1)] rounded-xl p-6 bg-[#1A1A1A] animate-fade-in">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
                   <Database size={20} className="text-[#008080]" />
                   2. Network Connection
@@ -407,7 +407,7 @@ export default function AssetMapPage() {
 
             {/* Stage 3 Action */}
             {demoStep === 3 && (
-              <div className="border border-[#008080]/30 rounded-xl p-6 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 animate-fade-in">
+              <div className="border border-[rgba(255,255,255,0.1)] rounded-xl p-6 bg-[#1A1A1A] animate-fade-in">
                 <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
                   <Coins size={20} className="text-[#34d399]" />
                   3. Distribute Yield
@@ -449,7 +449,7 @@ export default function AssetMapPage() {
               const selectedAsset = assets.find(a => a.id === clickedAssetId);
               if (!selectedAsset) return null;
               return (
-                <div className="border border-[#008080]/30 rounded-xl p-6 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 animate-fade-in mt-2">
+                <div className="border border-[rgba(255,255,255,0.1)] rounded-xl p-6 bg-[#1A1A1A] animate-fade-in mt-2">
                   <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-white">
                     <Database size={20} className="text-[#008080]" />
                     Asset Details
@@ -488,7 +488,7 @@ export default function AssetMapPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'relative' }}>
             
             {/* Filters Toggles (Glassmorphism) */}
-            <div className="border border-[#008080]/30 rounded-xl p-4 shadow-2xl backdrop-blur-xl bg-[#0a1919]/60 flex gap-8 flex-wrap items-center relative z-10">
+            <div className="border border-[rgba(255,255,255,0.1)] rounded-xl p-4 bg-[#1A1A1A] flex gap-8 flex-wrap items-center relative z-10">
             <div className="map-filters" style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <span className="text-xs tracking-widest text-[#008080]">ASSET FIELD:</span>

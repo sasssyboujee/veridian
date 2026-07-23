@@ -77,9 +77,10 @@ export default function Home() {
   return (
     <div className="bg-data-flow" style={{ minHeight: '100dvh', position: 'relative', overflowX: 'hidden' }}>
       {/* Dynamic Background */}
+      {/* Dynamic Background */}
       <canvas 
         ref={canvasRef} 
-        style={{ position: 'fixed', top: 0, left: 0, zIndex: -1, opacity: 0.6 }} 
+        style={{ position: 'fixed', top: 0, left: 0, zIndex: 0, opacity: 0.6, pointerEvents: 'none' }} 
       />
       
       <style dangerouslySetInnerHTML={{__html: `
@@ -131,8 +132,7 @@ export default function Home() {
         }
         .featured-tier {
           transform: scale(1.05);
-          border-color: var(--color-primary);
-          box-shadow: 0 0 30px rgba(118, 185, 0, 0.2);
+          border: 1px solid var(--color-primary);
         }
         .featured-tier::before {
           content: 'RECOMMENDED';
@@ -158,7 +158,7 @@ export default function Home() {
             <div style={{ color: 'var(--color-primary)', fontWeight: 700, marginBottom: '1rem', letterSpacing: '1px' }} className="text-small">
               VERIDIAN DECENTRALIZED ENERGY MESH
             </div>
-            <h1 className="hero-title glow-text" style={{ marginBottom: '1.5rem', lineHeight: 1.1 }}>
+            <h1 className="hero-title" style={{ marginBottom: '1.5rem', lineHeight: 1.1 }}>
               Power.<br/>Tokenize.<br/>Yield.
             </h1>
             <p className="text-body" style={{ color: 'var(--color-accent)', marginBottom: '2.5rem', maxWidth: '500px' }}>
@@ -203,7 +203,7 @@ export default function Home() {
               borderRadius: '50%',
               animation: 'spin 10s linear infinite reverse',
             }} />
-            <Database size={80} color="var(--color-primary)" className="glow-text" style={{ position: 'relative', zIndex: 10 }} />
+            <Database size={80} color="var(--color-primary)" style={{ position: 'relative', zIndex: 10 }} />
           </div>
         </div>
       </section>
@@ -212,7 +212,7 @@ export default function Home() {
       <section id="features" className="section-pad" style={{ backgroundColor: 'var(--color-bg-dark)' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <h2 className="text-h1 glow-text">Core Architecture</h2>
+            <h2 className="text-h1">Core Architecture</h2>
           </div>
 
           <div className="zig-zag">
@@ -276,7 +276,7 @@ export default function Home() {
       <section className="section-pad" style={{ background: 'var(--color-secondary)' }}>
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <h2 className="text-h1 glow-text">Network Validators</h2>
+            <h2 className="text-h1">Network Validators</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
             <Card className="hover-lift" style={{ padding: '2rem', borderTop: '2px solid var(--color-primary)' }}>
@@ -325,7 +325,7 @@ export default function Home() {
       <section id="economics" className="section-pad">
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <h2 className="text-h1 glow-text">Transparent Unit Economics</h2>
+            <h2 className="text-h1">Transparent Unit Economics</h2>
           </div>
           
           <div className="pricing-grid">
@@ -371,7 +371,7 @@ export default function Home() {
       {/* Final CTA */}
       <section className="section-pad" style={{ textAlign: 'center', borderTop: '1px solid var(--color-neutral)', borderBottom: '1px solid var(--color-neutral)' }}>
         <div className="container">
-          <h2 className="text-h1 glow-text" style={{ marginBottom: '1.5rem' }}>Ready to Execute?</h2>
+          <h2 className="text-h1" style={{ marginBottom: '1.5rem' }}>Ready to Execute?</h2>
           <p className="text-body" style={{ color: 'var(--color-accent)', marginBottom: '2.5rem', maxWidth: '600px', margin: '0 auto 2.5rem auto' }}>
             Join the deterministic economy. Tokenize your infrastructure and unlock global liquidity immediately.
           </p>
@@ -390,7 +390,7 @@ export default function Home() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <Logo size={32} />
               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-                <span className="text-h2 glow-text" style={{ fontSize: '1rem', letterSpacing: '1px' }}>VERIDIAN</span>
+                <span className="text-h2" style={{ fontSize: '1rem', letterSpacing: '1px' }}>VERIDIAN</span>
                 <span className="text-small" style={{ color: 'var(--color-primary)', letterSpacing: '2px', fontSize: '0.55rem' }}>CAPITAL</span>
               </div>
             </div>
