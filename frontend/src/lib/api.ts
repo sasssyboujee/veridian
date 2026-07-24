@@ -13,7 +13,7 @@ const getApiUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 };
 
-const API_URL = getApiUrl();
+export const API_URL = getApiUrl();
 
 
 export interface Asset {

@@ -87,7 +87,7 @@ export function AssetChat({ asset, variant = 'investor' }: { asset: OnChainAsset
     setIsLoading(true);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const { API_URL } = await import('@/lib/api');
       const response = await fetch(`${API_URL}/chat/${asset.address}`, {
         method: 'POST',
         headers: {
@@ -98,7 +98,7 @@ export function AssetChat({ asset, variant = 'investor' }: { asset: OnChainAsset
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to get response from AI');
+        throw new Error(errorData.detail || errorData.error || 'Failed to get response from AI');
       }
 
       const data = await response.json();
