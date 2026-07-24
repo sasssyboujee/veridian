@@ -4,7 +4,9 @@ pragma solidity ^0.8.20;
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract YieldDistributor {
+import {Ownable} from "openzeppelin-contracts/contracts/access/Ownable.sol";
+
+contract YieldDistributor is Ownable {
     using SafeERC20 for IERC20;
 
     IERC20 public stablecoin;
@@ -17,13 +19,15 @@ contract YieldDistributor {
         _;
     }
 
-    constructor(address _stablecoin, address _keystoneForwarder) {
+    constructor(address _stablecoin, address _keystoneForwarder) Ownable(msg.sender) {
+        require(_stablecoin != address(0), "Stablecoin cannot be zero address");
+        require(_keystoneForwarder != address(0), "Forwarder cannot be zero address");
         stablecoin = IERC20(_stablecoin);
         keystoneForwarder = _keystoneForwarder;
     }
 
-    function setKeystoneForwarder(address _keystoneForwarder) external {
-        // In production this should be restricted to owner
+    function setKeystoneForwarder(address _keystoneForwarder) external onlyOwner {
+        require(_keystoneForwarder != address(0), "Forwarder cannot be zero address");
         keystoneForwarder = _keystoneForwarder;
     }
 
