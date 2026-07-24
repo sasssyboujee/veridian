@@ -2,7 +2,7 @@
 // This script is executed by the Chainlink DON to fetch yield data
 
 const assetId = args[0];
-const apiEndpoint = `http://rwa-backend-url.example/yields/oracle/${assetId}`;
+const apiEndpoint = `${secrets.apiUrl}/yields/oracle/${assetId}`;
 
 console.log(`Fetching yield data for asset: ${assetId}`);
 

@@ -2,7 +2,9 @@
 
 import logging
 from typing import List
-from uuid import UUID
+from uuid import UUID, uuid4
+
+from app.config import get_settings
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, and_
@@ -131,52 +133,3 @@ async def get_telemetry_summary(
         "avg_utilization_rate": float(row.avg_utilization_rate or 0),
         "latest_reading": row.latest_reading.isoformat() if row.latest_reading else None,
     }
-
-
-@router.post("/simulate/{asset_id}")
-async def simulate_telemetry_month(
-    asset_id: UUID,
-    db: AsyncSession = Depends(get_db),
-):
-    """Simulate 30 days of telemetry and trigger a yield cycle (Demo only)."""
-    # Verify the asset exists
-    asset = await db.get(Asset, asset_id)
-    if not asset:
-        raise HTTPException(status_code=404, detail="Asset not found")
-
-    # Generate 30 days of telemetry
-    now = datetime.now(timezone.utc)
-    start_date = now - timedelta(days=30)
-    
-    for i in range(30):
-        log_time = start_date + timedelta(days=i)
-        telemetry = TelemetryLog(
-            asset_id=asset_id,
-            operating_hours=8.5,  # Fake 8.5 hours of sunlight
-            utilization_rate=0.85,
-            power_consumption_kwh=120.5,
-            temperature_celsius=35.0,
-            tpm_signature="deadbeef", # mock bypass signature
-            tpm_public_key=None,
-            raw_payload={"mock": True},
-            verified=True,
-            timestamp=log_time
-        )
-        db.add(telemetry)
-    
-    await db.flush()
-    
-    # Create billing cycle for this month
-    cycle = BillingCycle(
-        asset_id=asset_id,
-        period_start=start_date,
-        period_end=now,
-    )
-    db.add(cycle)
-    await db.flush()
-    await db.refresh(cycle)
-    
-    # Calculate yield for the generated cycle
-    yield_calc = await calculate_yield_for_cycle(db, cycle.id)
-    
-    return {"message": "Simulated 1 month of telemetry and calculated yield", "cycle_id": cycle.id}

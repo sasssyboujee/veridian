@@ -27,18 +27,27 @@ interface ChatMessage {
   suggestions?: string[];
 }
 
-const SUGGESTED_PROMPTS = [
+const INVESTOR_PROMPTS = [
   "Graph power consumption over time",
   "Why did the net yield drop recently?",
   "Show me the temperature trends",
   "Is this asset operating normally?"
 ];
 
-export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
+const LESSEE_PROMPTS = [
+  "How much energy did my panels generate today?",
+  "What is my current power usage?",
+  "How can I lower my electricity bill?",
+  "Is my solar hardware working optimally?"
+];
+
+export function AssetChat({ asset, variant = 'investor' }: { asset: OnChainAsset | null, variant?: 'investor' | 'lessee' }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const isLight = variant === 'lessee';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -55,13 +64,13 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
           id: 'welcome',
           role: 'assistant',
           content: `Hi! I am the Veridian AI Intelligence for ${asset.name}. I am connected directly to this asset's live telemetry stream and historical yield data on the blockchain. How can I help you analyze its performance today?`,
-          suggestions: SUGGESTED_PROMPTS
+          suggestions: isLight ? LESSEE_PROMPTS : INVESTOR_PROMPTS
         }
       ]);
     } else {
       setMessages([]);
     }
-  }, [asset?.address]);
+  }, [asset?.address, isLight]);
 
   const handleSend = async (forcedInput?: string) => {
     const textToSend = forcedInput || input;
@@ -78,7 +87,8 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/chat/${asset.address}`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${API_URL}/chat/${asset.address}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -122,8 +132,8 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
     if (!chart || chart.type === 'none' || !chart.data || chart.data.length === 0) return null;
 
     return (
-      <div className="chat-msg" style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.4)', padding: '1.5rem', borderRadius: '16px', border: '1px solid rgba(255, 255, 255, 0.05)', boxShadow: 'inset 0 2px 20px rgba(255,255,255,0.02)' }}>
-        <div style={{ marginBottom: '1.5rem', fontSize: '0.95rem', color: '#ffffff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+      <div className="chat-msg" style={{ marginTop: '1rem', background: isLight ? '#ffffff' : 'rgba(0,0,0,0.4)', padding: '1.5rem', borderRadius: '16px', border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255, 255, 255, 0.05)', boxShadow: isLight ? '0 4px 20px rgba(0,0,0,0.05)' : 'inset 0 2px 20px rgba(255,255,255,0.02)' }}>
+        <div style={{ marginBottom: '1.5rem', fontSize: '0.95rem', color: isLight ? '#1a1a1a' : '#ffffff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
           <BarChart2 size={18} color="var(--color-primary)" />
           {chart.title}
         </div>
@@ -131,12 +141,12 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
           <ResponsiveContainer width="100%" height="100%">
             {chart.type === 'bar' ? (
               <BarChart data={chart.data} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.05)"} vertical={false} />
+                <XAxis dataKey="name" stroke={isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)"} fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                <YAxis stroke={isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)"} fontSize={12} tickLine={false} axisLine={false} dx={-10} />
                 <RechartsTooltip 
-                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                  contentStyle={{ backgroundColor: 'rgba(15,15,15,0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(118,185,0,0.3)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', color: '#fff' }}
+                  cursor={{ fill: isLight ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)' }}
+                  contentStyle={{ backgroundColor: isLight ? '#ffffff' : 'rgba(15,15,15,0.95)', backdropFilter: 'blur(10px)', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(118,185,0,0.3)', borderRadius: '12px', boxShadow: isLight ? '0 10px 30px rgba(0,0,0,0.1)' : '0 10px 30px rgba(0,0,0,0.5)', color: isLight ? '#1a1a1a' : '#fff' }}
                   itemStyle={{ color: 'var(--color-primary)', fontWeight: 600 }}
                 />
                 <Bar dataKey="value" fill="url(#colorUv)" radius={[6, 6, 0, 0]} maxBarSize={45}>
@@ -150,14 +160,14 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
               </BarChart>
             ) : (
               <LineChart data={chart.data} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} dy={10} />
-                <YAxis stroke="rgba(255,255,255,0.4)" fontSize={12} tickLine={false} axisLine={false} dx={-10} />
+                <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.05)"} vertical={false} />
+                <XAxis dataKey="name" stroke={isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)"} fontSize={12} tickLine={false} axisLine={false} dy={10} />
+                <YAxis stroke={isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)"} fontSize={12} tickLine={false} axisLine={false} dx={-10} />
                 <RechartsTooltip 
-                  contentStyle={{ backgroundColor: 'rgba(15,15,15,0.95)', backdropFilter: 'blur(10px)', border: '1px solid rgba(118,185,0,0.3)', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', color: '#fff' }}
+                  contentStyle={{ backgroundColor: isLight ? '#ffffff' : 'rgba(15,15,15,0.95)', backdropFilter: 'blur(10px)', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(118,185,0,0.3)', borderRadius: '12px', boxShadow: isLight ? '0 10px 30px rgba(0,0,0,0.1)' : '0 10px 30px rgba(0,0,0,0.5)', color: isLight ? '#1a1a1a' : '#fff' }}
                   itemStyle={{ color: 'var(--color-primary)', fontWeight: 600 }}
                 />
-                <Line type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={4} dot={{ r: 5, fill: '#1a1a1a', strokeWidth: 2, stroke: 'var(--color-primary)' }} activeDot={{ r: 8, fill: 'var(--color-primary)', stroke: '#fff', strokeWidth: 2 }} />
+                <Line type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={4} dot={{ r: 5, fill: isLight ? '#ffffff' : '#1a1a1a', strokeWidth: 2, stroke: 'var(--color-primary)' }} activeDot={{ r: 8, fill: 'var(--color-primary)', stroke: '#fff', strokeWidth: 2 }} />
               </LineChart>
             )}
           </ResponsiveContainer>
@@ -168,8 +178,8 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
 
   if (!asset) {
     return (
-      <div style={{ padding: '2rem', height: '650px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)', backgroundColor: 'rgba(0,0,0,0.2)' }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ padding: '2rem', height: '650px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '24px', border: isLight ? '1px dashed rgba(0,0,0,0.1)' : '1px dashed rgba(255,255,255,0.1)', backgroundColor: isLight ? '#f9f9f9' : 'rgba(0,0,0,0.2)' }}>
+        <p style={{ color: isLight ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Activity size={20} /> Select an asset to initialize Intelligence Core.
         </p>
       </div>
@@ -178,11 +188,14 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
 
   return (
     <div
-      className="glass-card chat-card"
+      className={isLight ? "chat-card light" : "glass-card chat-card"}
       style={{
         borderRadius: '24px',
         position: 'relative',
         overflow: 'hidden',
+        border: isLight ? '1px solid rgba(0,0,0,0.08)' : undefined,
+        backgroundColor: isLight ? '#ffffff' : undefined,
+        boxShadow: isLight ? '0 4px 24px rgba(0,0,0,0.04)' : undefined
       }}
     >
 
@@ -194,21 +207,21 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
           zIndex: 1,
           flexShrink: 0,
           padding: '1.25rem 1.5rem',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          backgroundColor: 'rgba(0, 0, 0, 0.35)',
+          borderBottom: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)',
+          backgroundColor: isLight ? '#fcfcfc' : 'rgba(0, 0, 0, 0.35)',
           display: 'flex',
           alignItems: 'center',
           gap: '16px',
         }}
       >
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(0,128,128,0.15)', border: '1px solid rgba(118,185,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: isLight ? 'rgba(0,128,128,0.05)' : 'rgba(0,128,128,0.15)', border: isLight ? '1px solid rgba(118,185,0,0.2)' : '1px solid rgba(118,185,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Activity size={24} color="var(--color-primary)" />
         </div>
         <div>
-          <h3 style={{ color: '#ffffff', fontWeight: 700, fontSize: '1.15rem', letterSpacing: '0.5px', margin: 0 }}>{asset.name} Intelligence</h3>
+          <h3 style={{ color: isLight ? '#1a1a1a' : '#ffffff', fontWeight: 700, fontSize: '1.15rem', letterSpacing: '0.5px', margin: 0 }}>{asset.name} Intelligence</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'var(--color-primary)' }} />
-            <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Live Telemetry Sync Active</span>
+            <span style={{ fontSize: '0.8rem', color: isLight ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>Live Telemetry Sync Active</span>
           </div>
         </div>
       </div>
@@ -223,12 +236,13 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
           display: 'flex',
           flexDirection: 'column',
           gap: '1.5rem',
+          backgroundColor: isLight ? '#ffffff' : 'transparent'
         }}
       >
         {messages.map((msg, idx) => (
           <div key={msg.id} className="chat-msg" style={{ display: 'flex', gap: '16px', alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
             {msg.role === 'assistant' && (
-              <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(118,185,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
+              <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: isLight ? '#f0f0f0' : 'rgba(0,0,0,0.5)', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(118,185,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
                 <Bot size={18} color="var(--color-primary)" />
               </div>
             )}
@@ -239,10 +253,10 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
                 borderRadius: '16px',
                 borderBottomRightRadius: msg.role === 'user' ? '4px' : '16px',
                 borderTopLeftRadius: msg.role === 'assistant' ? '4px' : '16px',
-                background: msg.role === 'user' ? 'var(--color-primary)' : msg.isError ? 'rgba(255, 50, 50, 0.1)' : 'rgba(255, 255, 255, 0.08)',
-                border: msg.role === 'assistant' ? ('1px solid ' + (msg.isError ? 'rgba(255, 50, 50, 0.3)' : 'rgba(255, 255, 255, 0.15)')) : 'none',
-                boxShadow: msg.role === 'user' ? 'none' : '0 4px 15px rgba(0,0,0,0.2)',
-                color: msg.role === 'user' ? '#ffffff' : 'rgba(255,255,255,0.9)',
+                background: msg.role === 'user' ? 'var(--color-primary)' : msg.isError ? (isLight ? 'rgba(255, 50, 50, 0.05)' : 'rgba(255, 50, 50, 0.1)') : (isLight ? '#f5f5f5' : 'rgba(255, 255, 255, 0.08)'),
+                border: msg.role === 'assistant' ? ('1px solid ' + (msg.isError ? 'rgba(255, 50, 50, 0.3)' : (isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255, 255, 255, 0.15)'))) : 'none',
+                boxShadow: msg.role === 'user' ? (isLight ? '0 4px 12px rgba(118,185,0,0.2)' : 'none') : (isLight ? 'none' : '0 4px 15px rgba(0,0,0,0.2)'),
+                color: msg.role === 'user' ? '#ffffff' : (isLight ? '#1a1a1a' : 'rgba(255,255,255,0.9)'),
                 fontWeight: msg.role === 'user' ? 500 : 400,
                 backdropFilter: 'blur(10px)',
                 lineHeight: 1.6,
@@ -257,7 +271,7 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
             </div>
             
             {msg.role === 'user' && (
-              <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
+              <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: isLight ? 'var(--color-primary)' : 'rgba(255,255,255,0.1)', border: isLight ? 'none' : '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
                 <User size={18} color="#ffffff" />
               </div>
             )}
@@ -273,9 +287,9 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
                 style={{
                   padding: '10px 18px',
                   borderRadius: '100px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  color: 'rgba(255, 255, 255, 0.8)',
+                  backgroundColor: isLight ? '#ffffff' : 'rgba(255, 255, 255, 0.05)',
+                  border: isLight ? '1px solid rgba(0,0,0,0.15)' : '1px solid rgba(255, 255, 255, 0.1)',
+                  color: isLight ? '#444444' : 'rgba(255, 255, 255, 0.8)',
                   fontSize: '0.85rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
@@ -283,15 +297,15 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
                   fontWeight: 500
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(118, 185, 0, 0.15)';
-                  e.currentTarget.style.borderColor = 'rgba(118, 185, 0, 0.4)';
-                  e.currentTarget.style.color = '#fff';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(118, 185, 0, 0.2)';
+                  e.currentTarget.style.backgroundColor = isLight ? 'rgba(118, 185, 0, 0.05)' : 'rgba(118, 185, 0, 0.15)';
+                  e.currentTarget.style.borderColor = isLight ? 'rgba(118, 185, 0, 0.3)' : 'rgba(118, 185, 0, 0.4)';
+                  e.currentTarget.style.color = isLight ? 'var(--color-primary)' : '#fff';
+                  e.currentTarget.style.boxShadow = isLight ? 'none' : '0 4px 12px rgba(118, 185, 0, 0.2)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+                  e.currentTarget.style.backgroundColor = isLight ? '#ffffff' : 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = isLight ? '1px solid rgba(0,0,0,0.15)' : 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.color = isLight ? '#444444' : 'rgba(255, 255, 255, 0.8)';
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
@@ -303,10 +317,10 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
 
         {isLoading && (
           <div className="chat-msg" style={{ display: 'flex', gap: '16px', alignSelf: 'flex-start' }}>
-            <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(118,185,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
+            <div style={{ flexShrink: 0, width: 36, height: 36, borderRadius: '50%', background: isLight ? '#f0f0f0' : 'rgba(0,0,0,0.5)', border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(118,185,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '4px' }}>
               <Bot size={18} color="var(--color-primary)" />
             </div>
-            <div style={{ padding: '1.25rem', borderRadius: '16px', borderTopLeftRadius: '4px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '12px', backdropFilter: 'blur(10px)' }}>
+            <div style={{ padding: '1.25rem', borderRadius: '16px', borderTopLeftRadius: '4px', background: isLight ? '#f5f5f5' : 'rgba(255, 255, 255, 0.04)', border: isLight ? '1px solid rgba(0,0,0,0.05)' : '1px solid rgba(255, 255, 255, 0.08)', color: isLight ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: '12px', backdropFilter: 'blur(10px)' }}>
               <Loader2 size={18} className="animate-spin" color="var(--color-primary)" /> 
               <span style={{ fontSize: '0.95rem', letterSpacing: '0.5px' }}>Analyzing telemetry nodes...</span>
             </div>
@@ -322,8 +336,8 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
           position: 'relative',
           zIndex: 1,
           padding: '16px 24px',
-          backgroundColor: 'rgba(255, 255, 255, 0.06)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+          backgroundColor: isLight ? '#ffffff' : 'rgba(255, 255, 255, 0.06)',
+          borderTop: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255, 255, 255, 0.12)',
         }}
       >
         <form 
@@ -340,9 +354,9 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
               flex: 1, 
               padding: '1rem 1.5rem', 
               borderRadius: '100px', 
-              backgroundColor: 'rgba(255, 255, 255, 0.1)', 
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: '#ffffff',
+              backgroundColor: isLight ? '#f9f9f9' : 'rgba(255, 255, 255, 0.1)', 
+              border: isLight ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255, 255, 255, 0.2)',
+              color: isLight ? '#1a1a1a' : '#ffffff',
               outline: 'none',
               fontFamily: 'inherit',
               transition: 'all 0.3s ease',
@@ -362,8 +376,8 @@ export function AssetChat({ asset }: { asset: OnChainAsset | null }) {
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
-              background: (!input.trim() || isLoading) ? 'rgba(255,255,255,0.15)' : 'var(--color-primary)',
-              color: (!input.trim() || isLoading) ? 'rgba(255,255,255,0.5)' : '#ffffff',
+              background: (!input.trim() || isLoading) ? (isLight ? '#f0f0f0' : 'rgba(255,255,255,0.15)') : 'var(--color-primary)',
+              color: (!input.trim() || isLoading) ? (isLight ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.5)') : '#ffffff',
               border: 'none',
               cursor: (!input.trim() || isLoading) ? 'not-allowed' : 'pointer',
               boxShadow: 'none',

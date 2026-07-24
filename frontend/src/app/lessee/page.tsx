@@ -221,7 +221,7 @@ export default function LesseeDashboard() {
                     Interact with our AI Assistant to analyze live telemetry and historical yield data. The AI automatically detects your currently selected asset (<strong style={{ color: 'var(--color-primary)' }}>{activeAsset?.name || 'None'}</strong>) to provide contextual insights and real-time interactive charts.
                   </p>
                 </div>
-                <AssetChat asset={activeAsset} />
+                <AssetChat asset={activeAsset} variant="lessee" />
               </div>
             </Card>
 

@@ -47,23 +47,7 @@ async def chat_with_asset(
 ):
     settings = get_settings()
     if not settings.gemini_api_key or settings.gemini_api_key == "placeholder_for_demo":
-        # For demo purposes, if API key is not set, return a mock response
-        return ChatResponse(
-            message="Asset #201 is located in Seattle, which experienced 4 days of heavy cloud cover, reducing solar output by 20%. Please add a real GEMINI_API_KEY to the backend .env to enable real-time AI.",
-            chart=ChartData(
-                type="bar",
-                title="Solar Output (last 4 days)",
-                data=[
-                    ChartDataPoint(name="Day 1", value=45),
-                    ChartDataPoint(name="Day 2", value=30),
-                    ChartDataPoint(name="Day 3", value=35),
-                    ChartDataPoint(name="Day 4", value=32),
-                ],
-                x_key="name",
-                y_key="value"
-            ),
-            suggestions=["Why was Day 2 lower?", "Show me yield data"]
-        )
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured in production.")
 
     if not genai:
         raise HTTPException(status_code=500, detail="google-genai package not installed.")
@@ -73,51 +57,39 @@ async def chat_with_asset(
     asset = result.scalar_one_or_none()
     
     if not asset:
-        # Provide fallback demo data if DB is not seeded
-        asset_info = f"Demo Asset ({asset_address[:6]})"
-        status = "active"
-        telemetry_data = [
-            {"timestamp": "2026-07-20T10:00:00Z", "utilization_rate": 0.95, "power_consumption_kwh": 45, "temperature_celsius": 30},
-            {"timestamp": "2026-07-21T10:00:00Z", "utilization_rate": 0.80, "power_consumption_kwh": 30, "temperature_celsius": 28},
-            {"timestamp": "2026-07-22T10:00:00Z", "utilization_rate": 0.85, "power_consumption_kwh": 35, "temperature_celsius": 29},
-            {"timestamp": "2026-07-23T10:00:00Z", "utilization_rate": 0.82, "power_consumption_kwh": 32, "temperature_celsius": 29},
-        ]
-        yield_data = [
-            {"calculated_at": "2026-06-30T23:59:59Z", "gross_yield": 1500.0, "net_yield": 1350.0},
-            {"calculated_at": "2026-05-31T23:59:59Z", "gross_yield": 1600.0, "net_yield": 1440.0},
-        ]
-    else:
-        asset_info = f"{asset.name} (ID: {asset.id})"
-        status = asset.status
+        raise HTTPException(status_code=404, detail="Asset not found")
         
-        # 2. Fetch Recent Telemetry (Last 7 logs)
-        tel_result = await db.execute(
-            select(TelemetryLog).where(TelemetryLog.asset_id == asset.id).order_by(TelemetryLog.timestamp.desc()).limit(7)
-        )
-        telemetry = tel_result.scalars().all()
-        telemetry_data = [
-            {
-                "timestamp": t.timestamp.isoformat(),
-                "utilization_rate": float(t.utilization_rate),
-                "power_consumption_kwh": float(t.power_consumption_kwh) if t.power_consumption_kwh else 0,
-                "temperature_celsius": float(t.temperature_celsius) if t.temperature_celsius else 0
-            }
-            for t in telemetry
-        ]
+    asset_info = f"{asset.name} (ID: {asset.id})"
+    status = asset.status
+    
+    # 2. Fetch Recent Telemetry (Last 7 logs)
+    tel_result = await db.execute(
+        select(TelemetryLog).where(TelemetryLog.asset_id == asset.id).order_by(TelemetryLog.timestamp.desc()).limit(7)
+    )
+    telemetry = tel_result.scalars().all()
+    telemetry_data = [
+        {
+            "timestamp": t.timestamp.isoformat(),
+            "utilization_rate": float(t.utilization_rate),
+            "power_consumption_kwh": float(t.power_consumption_kwh) if t.power_consumption_kwh else 0,
+            "temperature_celsius": float(t.temperature_celsius) if t.temperature_celsius else 0
+        }
+        for t in telemetry
+    ]
 
-        # 3. Fetch Recent Yield Calculations
-        yield_result = await db.execute(
-            select(YieldCalculation).where(YieldCalculation.asset_id == asset.id).order_by(YieldCalculation.calculated_at.desc()).limit(3)
-        )
-        yields = yield_result.scalars().all()
-        yield_data = [
-            {
-                "calculated_at": y.calculated_at.isoformat(),
-                "gross_yield": float(y.gross_yield),
-                "net_yield": float(y.net_yield)
-            }
-            for y in yields
-        ]
+    # 3. Fetch Recent Yield Calculations
+    yield_result = await db.execute(
+        select(YieldCalculation).where(YieldCalculation.asset_id == asset.id).order_by(YieldCalculation.calculated_at.desc()).limit(3)
+    )
+    yields = yield_result.scalars().all()
+    yield_data = [
+        {
+            "calculated_at": y.calculated_at.isoformat(),
+            "gross_yield": float(y.gross_yield),
+            "net_yield": float(y.net_yield)
+        }
+        for y in yields
+    ]
 
     # 4. Construct System Prompt
     system_instruction = f"""You are the Veridian RWA Escrow Platform AI Assistant.

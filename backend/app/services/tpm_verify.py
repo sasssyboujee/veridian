@@ -27,8 +27,7 @@ def verify_tpm_signature(
     Args:
         raw_payload: The original telemetry data dict.
         signature_hex: Hex-encoded ECDSA signature (DER format).
-        public_key_pem: PEM-encoded EC public key. If None, uses a
-                        development fallback (accepts all in dev mode).
+        public_key_pem: PEM-encoded EC public key.
 
     Returns:
         True if the signature is valid, False otherwise.
@@ -37,15 +36,32 @@ def verify_tpm_signature(
         logger.warning("Empty TPM signature received")
         return False
 
+    if not public_key_pem:
+        logger.error("No TPM public key provided")
+        return False
+
+    # Timestamp verification
+    timestamp_str = raw_payload.get("timestamp")
+    if not timestamp_str:
+        logger.error("Missing timestamp in payload")
+        return False
+        
+    try:
+        from datetime import datetime, timezone
+        payload_time = datetime.fromisoformat(timestamp_str)
+        if not payload_time.tzinfo:
+            payload_time = payload_time.replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        if abs((now - payload_time).total_seconds()) > 300:
+            logger.error("Payload timestamp drift exceeds 5 minutes")
+            return False
+    except ValueError:
+        logger.error("Invalid timestamp format")
+        return False
+
     # Canonical JSON serialization for deterministic hashing
     payload_bytes = json.dumps(raw_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     payload_hash = hashlib.sha256(payload_bytes).digest()
-
-    if public_key_pem is None:
-        # Development mode: accept signatures with a known dev key
-        # In production, this MUST be replaced with actual TPM public keys
-        logger.warning("No TPM public key provided — using development bypass")
-        return _dev_mode_verify(signature_hex)
 
     try:
         # Load the EC public key
@@ -70,18 +86,6 @@ def verify_tpm_signature(
         return False
     except Exception as e:
         logger.error(f"Unexpected error during TPM verification: {e}")
-        return False
-
-
-def _dev_mode_verify(signature_hex: str) -> bool:
-    """
-    Development mode verification — accepts any non-empty hex signature.
-    MUST NOT be used in production.
-    """
-    try:
-        bytes.fromhex(signature_hex)
-        return True
-    except ValueError:
         return False
 
 

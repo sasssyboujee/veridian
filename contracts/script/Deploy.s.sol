@@ -49,7 +49,7 @@ contract DeployScript is Script {
         );
 
         // The deployer itself must be verified to hold/mint tokens and create assets.
-        autoKYC.verifyMe();
+        autoKYC.verifyAddress(vm.addr(deployerPrivateKey));
         
         // 6. Use Factory to deploy dummy assets for different industries
         address[] memory tokens = new address[](4);

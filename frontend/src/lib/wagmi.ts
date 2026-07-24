@@ -8,7 +8,7 @@ export const uzhEth = defineChain({
   name: 'UZH_ETH_PoS',
   nativeCurrency: { name: 'UZHETHs', symbol: 'UZHETHs', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://rpc.uzheths.ifi.uzh.ch'] },
+    default: { http: [process.env.NEXT_PUBLIC_RPC_URL || ''] },
   },
   blockExplorers: {
     default: { name: 'Explorer', url: 'https://explorer.uzheths.ifi.uzh.ch' },

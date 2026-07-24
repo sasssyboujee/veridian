@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Logo } from '@/components/Logo';
 import Link from 'next/link';
 import { WalletConnect } from '@/components/WalletConnect';
-import { Sun, Tractor, Wind, ShieldCheck, MapPin, Activity, AlertCircle, CheckCircle2, FileCheck2, UserCheck, Scale, Factory, Box, Shield } from 'lucide-react';
+import { Sun, Tractor, Wind, ShieldCheck, MapPin, Activity, AlertCircle, CheckCircle2, FileCheck2, UserCheck, Shield, Box, Link2, Cpu, Zap, Settings, TrendingUp } from 'lucide-react';
+import { YieldWaterfall } from '@/components/YieldWaterfall';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -63,7 +64,7 @@ export default function OperationsPortal() {
     if (!activeTelemetryAsset) return;
     setIsSimulating(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${API_URL}/telemetry/simulate/${activeTelemetryAsset.id}`, {
         method: 'POST',
       });
@@ -83,7 +84,7 @@ export default function OperationsPortal() {
     if (!activeTelemetryAsset) return;
     setIsSlashing(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${API_URL}/assets/${activeTelemetryAsset.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -102,7 +103,7 @@ export default function OperationsPortal() {
     if (!activeTelemetryAsset) return;
     setIsFetchingOracle(true);
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${API_URL}/yields/oracle/${activeTelemetryAsset.id}?api_key=dev-oracle-key-123`);
       if (res.ok) {
         const data = await res.json();
@@ -143,7 +144,7 @@ export default function OperationsPortal() {
   const { data: yieldsData } = useQuery({
     queryKey: ['yields', activeTelemetryAsset?.id],
     queryFn: async () => {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${API_URL}/yields/${activeTelemetryAsset!.id}`);
       if (!res.ok) return [];
       return res.json();
@@ -169,6 +170,19 @@ export default function OperationsPortal() {
 
   const getLocationForAsset = (name: string) => {
     const lower = name.toLowerCase();
+    
+    // Explicit matching based on names
+    if (lower.includes('cape town')) return 'Cape Town, ZA (Solar Array)';
+    if (lower.includes('western cape')) return 'Western Cape, ZA (Solar Array)';
+    if (lower.includes('nevada')) return 'Nevada, US (Solar Array)';
+    if (lower.includes('texas')) return 'Texas, US (Wind Farm)';
+    if (lower.includes('north sea')) return 'North Sea, UK (Offshore Wind)';
+    if (lower.includes('kenya')) return 'Nairobi, KE (Agri-Tech)';
+    if (lower.includes('central valley')) return 'California, US (Agri-Tech)';
+    if (lower.includes('iowa')) return 'Iowa, US (Agri-Farm)';
+    if (lower.includes('queensland')) return 'Queensland, AU (Agri-Tech)';
+    
+    // Fallbacks
     if (lower.includes('solar')) return 'Nevada, US (Solar Array)';
     if (lower.includes('farm')) return 'Iowa, US (Agri-Farm)';
     if (lower.includes('wind')) return 'North Sea, UK (Offshore Wind)';
@@ -176,7 +190,12 @@ export default function OperationsPortal() {
     return 'Global Hardware';
   };
 
-  const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const [terminalLines, setTerminalLines] = useState<string[]>([
+    "> HRoT_HANDSHAKE: ESTABLISHED",
+    "> SIGNATURE_VERIFIED: 0x4f8a...9b2c",
+    "> SIGNATURE_VERIFIED: 0x1a9e...4c8f",
+    "> SIGNATURE_VERIFIED: 0x7c2d...1a5e"
+  ]);
   useEffect(() => {
     if (recentLog?.tpm_signature) {
       setTerminalLines(prev => {
@@ -232,7 +251,7 @@ export default function OperationsPortal() {
         }
       }
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       await fetch(`${API_URL}/assets/`, {
         method: 'POST',
         headers: {
@@ -355,12 +374,15 @@ export default function OperationsPortal() {
                                 {isSolarPoolOpen && (
                                   <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0,0,0,0.2)' }}>
                                     {solarAssets.map(asset => (
-                                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} style={{ padding: '1rem 1.5rem', paddingLeft: '3rem', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', backgroundColor: activeTelemetryAsset?.id === asset.id ? 'rgba(118,185,0,0.1)' : 'transparent', borderLeft: activeTelemetryAsset?.id === asset.id ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s' }}>
+                                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} style={{ padding: '1rem 1.5rem', paddingLeft: '3rem', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', backgroundColor: activeTelemetryAsset?.id === asset.id ? 'rgba(118,185,0,0.1)' : 'transparent', borderLeft: activeTelemetryAsset?.id === asset.id ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                           <div>
                                             <div className="text-body" style={{ fontWeight: 700, color: activeTelemetryAsset?.id === asset.id ? 'var(--color-tertiary)' : 'var(--color-accent)', fontSize: '0.9rem' }}>{asset.symbol || asset.name}</div>
                                             <div className="text-small" style={{ color: 'var(--color-accent)', marginTop: '4px', fontSize: '0.75rem' }}>{getLocationForAsset(asset.name)}</div>
                                           </div>
+                                        </div>
+                                        <div className="text-small" style={{ color: 'var(--color-primary)', fontWeight: 700, fontFamily: 'var(--font-tech)' }}>
+                                          ${(Number(asset.total_token_supply || 10000) * 100).toLocaleString()}
                                         </div>
                                       </div>
                                     ))}
@@ -371,13 +393,16 @@ export default function OperationsPortal() {
 
                             {/* Other Assets */}
                             {otherAssets.map(asset => (
-                              <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-neutral)', cursor: 'pointer', backgroundColor: activeTelemetryAsset?.id === asset.id ? 'rgba(118,185,0,0.1)' : 'transparent', borderLeft: activeTelemetryAsset?.id === asset.id ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s' }}>
+                              <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-neutral)', cursor: 'pointer', backgroundColor: activeTelemetryAsset?.id === asset.id ? 'rgba(118,185,0,0.1)' : 'transparent', borderLeft: activeTelemetryAsset?.id === asset.id ? '4px solid var(--color-primary)' : '4px solid transparent', transition: 'all 0.2s', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                   <div style={{ color: activeTelemetryAsset?.id === asset.id ? 'var(--color-primary)' : 'var(--color-accent)' }}>{getIconForAsset(asset.name)}</div>
                                   <div>
                                     <div className="text-body" style={{ fontWeight: 700, color: activeTelemetryAsset?.id === asset.id ? 'var(--color-tertiary)' : 'var(--color-accent)' }}>{asset.symbol || asset.name}</div>
                                     <div className="text-small" style={{ color: 'var(--color-accent)', marginTop: '4px' }}>{getLocationForAsset(asset.name)}</div>
                                   </div>
+                                </div>
+                                <div className="text-small" style={{ color: 'var(--color-primary)', fontWeight: 700, fontFamily: 'var(--font-tech)' }}>
+                                  ${(Number(asset.total_token_supply || 10000) * 100).toLocaleString()}
                                 </div>
                               </div>
                             ))}
@@ -522,46 +547,7 @@ export default function OperationsPortal() {
               </div>
 
               {/* Yield Waterfall Visualization */}
-              {latestYield && (
-                <div style={{ marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid var(--color-neutral)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
-                    <Activity color="var(--color-tertiary)" size={24} />
-                    <h3 className="text-h2" style={{ color: 'var(--color-tertiary)' }}>Automated Yield Distribution (75/8/7/5/5 Waterfall)</h3>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-success)', backgroundColor: 'rgba(110,250,95,0.05)' }}>
-                      <div className="text-small" style={{ color: 'var(--color-success)', marginBottom: '8px', fontWeight: 600 }}>INVESTOR NET YIELD (75%)</div>
-                      <div style={{ fontSize: '2rem', color: 'var(--color-success)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
-                        ${Number(latestYield.net_yield).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
-                      </div>
-                    </Card>
-                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
-                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>O&M (8%)</div>
-                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
-                        ${(Number(latestYield.champions_fee) * (8/15)).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
-                      </div>
-                    </Card>
-                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
-                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>RESERVES (7%)</div>
-                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
-                        ${(Number(latestYield.champions_fee) * (7/15)).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
-                      </div>
-                    </Card>
-                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
-                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>EXPANSION FUND (5%)</div>
-                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
-                        ${Number(latestYield.opportunity_fee).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
-                      </div>
-                    </Card>
-                    <Card style={{ padding: '1.5rem', border: '1px solid var(--color-primary)' }}>
-                      <div className="text-small" style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: 600 }}>PLATFORM FEE (5%)</div>
-                      <div style={{ fontSize: '2rem', color: 'var(--color-primary)', fontWeight: 'bold', fontFamily: 'var(--font-tech)' }}>
-                        ${Number(latestYield.core_fee).toLocaleString(undefined, {minimumFractionDigits: 2})} <span style={{fontSize: '1rem'}}>USDC</span>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
+              {latestYield && <YieldWaterfall latestYield={latestYield} />}
             </div>
           )}
 

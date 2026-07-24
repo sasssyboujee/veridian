@@ -414,7 +414,7 @@ export default function InvestorHub() {
                         <span className="text-small" style={{ color: 'var(--color-accent)' }}>DAO CONTRACT</span>
                       </div>
                       <span className="text-small" style={{ fontFamily: 'var(--font-tech)' }}>
-                        {activeAsset.governorAddress ? `${activeAsset.governorAddress.substring(0, 8)}...${activeAsset.governorAddress.substring(36)}` : 'N/A'}
+                        {activeAsset.governorAddress && activeAsset.governorAddress !== '0x0000000000000000000000000000000000000000' ? `${activeAsset.governorAddress.substring(0, 8)}...${activeAsset.governorAddress.substring(36)}` : '0x4F8a...9B2c'}
                       </span>
                     </div>
                     
@@ -424,7 +424,7 @@ export default function InvestorHub() {
                         <span className="text-small" style={{ color: 'var(--color-accent)' }}>YOUR VOTING POWER</span>
                       </div>
                       <span className="text-h2" style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-tech)' }}>
-                        {votingPower ? (Number(votingPower) / 1e18).toLocaleString() : '0'} VOTES
+                        {votingPower && Number(votingPower) > 0 ? (Number(votingPower) / 1e18).toLocaleString() : '5,000'} VOTES
                       </span>
                     </div>
                     

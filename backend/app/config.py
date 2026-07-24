@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     debug: bool = False
+    cors_origins: list[str] = ["https://app.rwa-escrow.com"]
 
     # Oracle / Chainlink
     oracle_api_key: str = ""

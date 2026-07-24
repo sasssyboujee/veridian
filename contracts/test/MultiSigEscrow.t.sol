@@ -76,4 +76,33 @@ contract MultiSigEscrowTest is Test {
         assertEq(confirmationsAfter, 3);
         assertEq(usdc.balanceOf(seller), 50000 * 10**18);
     }
+    
+    function testTPMHardwareFaultSlash() public {
+        // TPM Hardware Fault simulation triggers a slashing condition
+        // The signers reach consensus to release the bond to the treasury instead of the operator
+        address treasury = address(0x999);
+        uint256 slashAmount = 100000 * 10**18; // Slash full deposit
+        
+        // s1 (Oracle node/signer) proposes slash
+        vm.prank(s1);
+        escrow.proposeRelease(treasury, slashAmount);
+        
+        // s2 confirms
+        vm.prank(s2);
+        escrow.confirmRelease(0);
+        
+        // s3 confirms, reaching threshold (3)
+        vm.prank(s3);
+        escrow.confirmRelease(0);
+        
+        (, , bool executedAfter, uint256 confirmationsAfter) = escrow.proposals(0);
+        assertTrue(executedAfter);
+        assertEq(confirmationsAfter, 3);
+        
+        // Treasury receives the slashed bond
+        assertEq(usdc.balanceOf(treasury), slashAmount);
+        
+        // Original operator/seller receives 0
+        assertEq(usdc.balanceOf(seller), 0);
+    }
 }

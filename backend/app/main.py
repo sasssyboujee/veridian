@@ -25,6 +25,7 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("🛑 RWA Escrow Backend shutting down...")
 
+settings = get_settings()
 
 app = FastAPI(
     title="RWA Escrow Platform API",
@@ -36,12 +37,15 @@ app = FastAPI(
     ),
     version="0.1.0",
     lifespan=lifespan,
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
+    openapi_url="/openapi.json" if settings.debug else None,
 )
 
-# CORS — allow frontend dev server
+# CORS — restrict to allowed origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
