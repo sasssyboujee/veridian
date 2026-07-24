@@ -5,7 +5,7 @@ import time
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,14 +17,20 @@ from app.schemas import (
 )
 from app.services.yield_engine import calculate_yield_for_cycle
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/yields", tags=["Yields"])
 
 
 # ─── Billing Cycles ─────────────────────────────────────────
 
 @router.post("/cycles", response_model=BillingCycleResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("50/minute")
 async def create_billing_cycle(
+    request: Request,
     payload: BillingCycleCreate,
     db: AsyncSession = Depends(get_db),
 ):
@@ -41,7 +47,9 @@ async def create_billing_cycle(
 
 
 @router.get("/cycles/{asset_id}", response_model=List[BillingCycleResponse])
+@limiter.limit("50/minute")
 async def list_billing_cycles(
+    request: Request,
     asset_id: UUID,
     db: AsyncSession = Depends(get_db),
 ):
@@ -57,7 +65,9 @@ async def list_billing_cycles(
 # ─── Yield Calculation ───────────────────────────────────────
 
 @router.post("/calculate/{billing_cycle_id}", response_model=YieldResponse)
+@limiter.limit("50/minute")
 async def trigger_yield_calculation(
+    request: Request,
     billing_cycle_id: UUID,
     db: AsyncSession = Depends(get_db),
 ):
@@ -72,7 +82,9 @@ async def trigger_yield_calculation(
 
 
 @router.get("/{asset_id}", response_model=List[YieldResponse])
+@limiter.limit("50/minute")
 async def get_yields(
+    request: Request,
     asset_id: UUID,
     distributed_only: bool = False,
     db: AsyncSession = Depends(get_db),
@@ -94,7 +106,9 @@ async def get_yields(
     summary="Oracle-ready yield data",
     description="Deterministic, JSON-formatted yield metrics for Chainlink Functions consumption.",
 )
+@limiter.limit("100/minute")
 async def get_oracle_yield(
+    request: Request,
     asset_id: UUID,
     api_key: str = Query(..., description="Oracle API key for authentication"),
     db: AsyncSession = Depends(get_db),

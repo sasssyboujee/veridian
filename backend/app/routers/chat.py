@@ -2,14 +2,20 @@
 
 import json
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
+import logging
 
 from app.database import get_db
 from app.config import get_settings
 from app.models import Asset, TelemetryLog, YieldCalculation
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 try:
     from google import genai
@@ -40,14 +46,14 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/{asset_address}", response_model=ChatResponse)
+@limiter.limit("5/minute")
 async def chat_with_asset(
     asset_address: str,
-    request: ChatRequest,
+    request: Request,
+    chat_request: ChatRequest,
     db: AsyncSession = Depends(get_db)
 ):
     settings = get_settings()
-    if not settings.gemini_api_key or settings.gemini_api_key == "placeholder_for_demo":
-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured in production.")
 
     if not genai:
         raise HTTPException(status_code=500, detail="google-genai package not installed.")
@@ -113,7 +119,7 @@ Recent Yields:
         client = genai.Client(api_key=settings.gemini_api_key)
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=request.message,
+            contents=chat_request.message,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 response_mime_type="application/json",
@@ -127,8 +133,7 @@ Recent Yields:
         return ChatResponse(**parsed_data)
         
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception("LLM Error in chat_with_asset")
         
         # Check if it's a rate limit issue
         error_msg = str(e)

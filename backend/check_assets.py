@@ -1,29 +1,39 @@
 import asyncio
-from app.database import AsyncSessionLocal
-from app.models import Asset
-from sqlalchemy import select, delete
+import logging
+from sqlalchemy import text
+from app.database import engine
+from app.logger import setup_logging
+import logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 async def check():
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(select(Asset))
-        assets = result.scalars().all()
-        print("Total assets:", len(assets))
+    async with engine.begin() as conn:
+        result = await conn.execute(text("SELECT id, name, asset_type, status FROM assets"))
+        assets = result.all()
+        logger.info(f"Total assets: {len(assets)}")
         
-        seen = set()
+        seen_names = set()
         duplicates = []
+        
         for a in assets:
-            if a.name in seen:
+            if a.name in seen_names:
                 duplicates.append(a.id)
             else:
-                seen.add(a.name)
-                print(f"Name: {a.name}, Type: {a.asset_type}, Status: {a.status}")
+                seen_names.add(a.name)
+                logger.info(f"Name: {a.name}, Type: {a.asset_type}, Status: {a.status}")
                 
         if duplicates:
-            print(f"Deleting {len(duplicates)} duplicates...")
-            await session.execute(delete(Asset).where(Asset.id.in_(duplicates)))
-            await session.commit()
-            print("Duplicates deleted.")
+            logger.info(f"Deleting {len(duplicates)} duplicates...")
+            await conn.execute(
+                text("DELETE FROM assets WHERE id = ANY(:ids)"),
+                {"ids": duplicates}
+            )
+            logger.info("Duplicates deleted.")
         else:
-            print("No duplicates found.")
+            logger.info("No duplicates found.")
 
 asyncio.run(check())

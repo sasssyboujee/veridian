@@ -19,6 +19,7 @@ class AssetCreate(BaseModel):
     asset_type: str = "equipment"
     total_token_supply: Optional[Decimal] = None
     status: Optional[str] = None
+    tpm_public_key: Optional[str] = None
     metadata: dict = Field(default_factory=dict)
 
 
@@ -27,6 +28,7 @@ class AssetUpdate(BaseModel):
     description: Optional[str] = None
     token_address: Optional[str] = None
     status: Optional[str] = None
+    tpm_public_key: Optional[str] = None
     stake_slashed: Optional[bool] = None
     operator_stake_balance: Optional[Decimal] = None
     metadata: Optional[dict] = None
@@ -48,6 +50,7 @@ class AssetResponse(BaseModel):
     jurisdiction: str
     asset_type: str
     total_token_supply: Optional[Decimal]
+    tpm_public_key: Optional[str]
     status: str
     operator_stake_balance: Decimal
     stake_slashed: bool

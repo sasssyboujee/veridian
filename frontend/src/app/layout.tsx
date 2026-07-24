@@ -24,6 +24,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__ENV__ = { NEXT_PUBLIC_API_URL: "${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}" }`,
+          }}
+        />
+      </head>
       <body className={robotoMono.className}>
         <Web3Provider>
           <Navbar />

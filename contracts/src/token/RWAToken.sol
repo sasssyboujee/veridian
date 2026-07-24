@@ -37,11 +37,13 @@ contract RWAToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
     }
 
     function addAgent(address agent) external onlyOwner {
+        require(agent != address(0), "Invalid agent address");
         _agents[agent] = true;
         emit AgentAdded(agent);
     }
 
     function removeAgent(address agent) external onlyOwner {
+        require(agent != address(0), "Invalid agent address");
         _agents[agent] = false;
         emit AgentRemoved(agent);
     }

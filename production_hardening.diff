@@ -1,0 +1,709 @@
+diff --git a/backend/app/config.py b/backend/app/config.py
+index be9100f..f505a73 100644
+--- a/backend/app/config.py
++++ b/backend/app/config.py
+@@ -8,20 +8,24 @@ class Settings(BaseSettings):
+     """Application settings loaded from environment variables."""
+ 
+     # Database
+-    database_url: str = "postgresql+asyncpg://localhost:5432/rwa_escrow"
+-    database_url_sync: str = "postgresql://localhost:5432/rwa_escrow"
++    database_url: str
++    database_url_sync: str
+ 
+     # API
+     api_host: str = "0.0.0.0"
+     api_port: int = 8000
+     debug: bool = False
+-    cors_origins: list[str] = ["https://app.rwa-escrow.com"]
++    cors_origins: list[str]
++
++    # Services
++    redis_url: str
+ 
+     # Oracle / Chainlink
+     oracle_api_key: str = ""
+-    gemini_api_key: str = ""
++    gemini_api_key: str
+ 
+     # Contract Addresses
++    rpc_url: str
+     rwa_token_address: str = ""
+     escrow_address: str = ""
+     yield_distributor_address: str = ""
+diff --git a/backend/app/main.py b/backend/app/main.py
+index 19a0eab..60e274f 100644
+--- a/backend/app/main.py
++++ b/backend/app/main.py
+@@ -9,18 +9,31 @@ from fastapi.middleware.cors import CORSMiddleware
+ from app.config import get_settings
+ from app.routers import assets, telemetry, yields
+ 
+-logging.basicConfig(
+-    level=logging.INFO,
+-    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+-)
++from app.logger import setup_logging
++setup_logging()
+ logger = logging.getLogger(__name__)
+ 
+ 
++import sys
++from slowapi import Limiter, _rate_limit_exceeded_handler
++from slowapi.util import get_remote_address
++from slowapi.errors import RateLimitExceeded
++from pydantic import ValidationError
++
++limiter = Limiter(key_func=get_remote_address)
++
+ @asynccontextmanager
+ async def lifespan(app: FastAPI):
+     """Application lifespan handler for startup/shutdown."""
+     logger.info("🚀 RWA Escrow Backend starting up...")
+-    settings = get_settings()
++    try:
++        settings = get_settings()
++        if not settings.gemini_api_key or not settings.database_url or not settings.cors_origins or not settings.redis_url or not settings.rpc_url:
++            raise ValueError("Empty required setting detected.")
++    except (ValidationError, ValueError) as e:
++        logger.critical(f"CRITICAL BOOT FAILURE: Missing or invalid environment variable. Details: {e}")
++        sys.exit(1)
++        
+     logger.info(f"   Debug mode: {settings.debug}")
+     yield
+     logger.info("🛑 RWA Escrow Backend shutting down...")
+@@ -42,6 +55,9 @@ app = FastAPI(
+     openapi_url="/openapi.json" if settings.debug else None,
+ )
+ 
++app.state.limiter = limiter
++app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
++
+ # CORS — restrict to allowed origins
+ app.add_middleware(
+     CORSMiddleware,
+diff --git a/backend/app/routers/assets.py b/backend/app/routers/assets.py
+index d29f671..d7a01b1 100644
+--- a/backend/app/routers/assets.py
++++ b/backend/app/routers/assets.py
+@@ -4,7 +4,7 @@ import logging
+ from typing import List
+ from uuid import UUID
+ 
+-from fastapi import APIRouter, Depends, HTTPException, status
++from fastapi import APIRouter, Depends, HTTPException, status, Request
+ from sqlalchemy import select
+ from sqlalchemy.ext.asyncio import AsyncSession
+ 
+@@ -12,12 +12,17 @@ from app.database import get_db
+ from app.models import Asset
+ from app.schemas import AssetCreate, AssetUpdate, AssetResponse
+ 
++from slowapi import Limiter
++from slowapi.util import get_remote_address
++
+ logger = logging.getLogger(__name__)
++limiter = Limiter(key_func=get_remote_address)
+ router = APIRouter(prefix="/assets", tags=["Assets"])
+ 
+ 
+ @router.post("/", response_model=AssetResponse, status_code=status.HTTP_201_CREATED)
+-async def create_asset(payload: AssetCreate, db: AsyncSession = Depends(get_db)):
++@limiter.limit("100/minute")
++async def create_asset(request: Request, payload: AssetCreate, db: AsyncSession = Depends(get_db)):
+     """Register a new real-world asset."""
+     asset = Asset(
+         name=payload.name,
+@@ -39,7 +44,9 @@ async def create_asset(payload: AssetCreate, db: AsyncSession = Depends(get_db))
+ 
+ 
+ @router.get("/", response_model=List[AssetResponse])
++@limiter.limit("100/minute")
+ async def list_assets(
++    request: Request,
+     status_filter: str = None,
+     limit: int = 50,
+     offset: int = 0,
+@@ -55,7 +62,8 @@ async def list_assets(
+ 
+ 
+ @router.get("/{asset_id}", response_model=AssetResponse)
+-async def get_asset(asset_id: UUID, db: AsyncSession = Depends(get_db)):
++@limiter.limit("100/minute")
++async def get_asset(request: Request, asset_id: UUID, db: AsyncSession = Depends(get_db)):
+     """Get a specific asset by ID."""
+     asset = await db.get(Asset, asset_id)
+     if not asset:
+@@ -64,7 +72,9 @@ async def get_asset(asset_id: UUID, db: AsyncSession = Depends(get_db)):
+ 
+ 
+ @router.patch("/{asset_id}", response_model=AssetResponse)
++@limiter.limit("100/minute")
+ async def update_asset(
++    request: Request,
+     asset_id: UUID,
+     payload: AssetUpdate,
+     db: AsyncSession = Depends(get_db),
+@@ -87,7 +97,8 @@ async def update_asset(
+ 
+ 
+ @router.delete("/{asset_id}", status_code=status.HTTP_204_NO_CONTENT)
+-async def delete_asset(asset_id: UUID, db: AsyncSession = Depends(get_db)):
++@limiter.limit("100/minute")
++async def delete_asset(request: Request, asset_id: UUID, db: AsyncSession = Depends(get_db)):
+     """Delete an asset."""
+     asset = await db.get(Asset, asset_id)
+     if not asset:
+diff --git a/backend/app/routers/chat.py b/backend/app/routers/chat.py
+index 6aaad58..c41bb92 100644
+--- a/backend/app/routers/chat.py
++++ b/backend/app/routers/chat.py
+@@ -2,14 +2,20 @@
+ 
+ import json
+ from uuid import UUID
+-from fastapi import APIRouter, Depends, HTTPException
++from fastapi import APIRouter, Depends, HTTPException, Request
+ from sqlalchemy.ext.asyncio import AsyncSession
+ from sqlalchemy import select
+ from pydantic import BaseModel, Field
++import logging
+ 
+ from app.database import get_db
+ from app.config import get_settings
+ from app.models import Asset, TelemetryLog, YieldCalculation
++from slowapi import Limiter
++from slowapi.util import get_remote_address
++
++logger = logging.getLogger(__name__)
++limiter = Limiter(key_func=get_remote_address)
+ 
+ try:
+     from google import genai
+@@ -40,14 +46,14 @@ class ChatResponse(BaseModel):
+ 
+ 
+ @router.post("/{asset_address}", response_model=ChatResponse)
++@limiter.limit("5/minute")
+ async def chat_with_asset(
+     asset_address: str,
+-    request: ChatRequest,
++    request: Request,
++    chat_request: ChatRequest,
+     db: AsyncSession = Depends(get_db)
+ ):
+     settings = get_settings()
+-    if not settings.gemini_api_key or settings.gemini_api_key == "placeholder_for_demo":
+-        raise HTTPException(status_code=500, detail="GEMINI_API_KEY is not configured in production.")
+ 
+     if not genai:
+         raise HTTPException(status_code=500, detail="google-genai package not installed.")
+@@ -113,7 +119,7 @@ Recent Yields:
+         client = genai.Client(api_key=settings.gemini_api_key)
+         response = client.models.generate_content(
+             model='gemini-2.5-flash',
+-            contents=request.message,
++            contents=chat_request.message,
+             config=types.GenerateContentConfig(
+                 system_instruction=system_instruction,
+                 response_mime_type="application/json",
+@@ -127,8 +133,7 @@ Recent Yields:
+         return ChatResponse(**parsed_data)
+         
+     except Exception as e:
+-        import traceback
+-        traceback.print_exc()
++        logger.exception("LLM Error in chat_with_asset")
+         
+         # Check if it's a rate limit issue
+         error_msg = str(e)
+diff --git a/backend/app/routers/telemetry.py b/backend/app/routers/telemetry.py
+index cb11d84..f2bca79 100644
+--- a/backend/app/routers/telemetry.py
++++ b/backend/app/routers/telemetry.py
+@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
+ 
+ from app.config import get_settings
+ 
+-from fastapi import APIRouter, Depends, HTTPException, status
++from fastapi import APIRouter, Depends, HTTPException, status, Request
+ from sqlalchemy import select, and_
+ from sqlalchemy.ext.asyncio import AsyncSession
+ 
+@@ -17,12 +17,18 @@ from app.services.tpm_verify import verify_tpm_signature
+ from app.services.yield_engine import calculate_yield_for_cycle
+ from datetime import datetime, timedelta, timezone
+ 
++from slowapi import Limiter
++from slowapi.util import get_remote_address
++
+ logger = logging.getLogger(__name__)
++limiter = Limiter(key_func=get_remote_address)
+ router = APIRouter(prefix="/telemetry", tags=["Telemetry"])
+ 
+ 
+ @router.post("/", response_model=TelemetryResponse, status_code=status.HTTP_201_CREATED)
++@limiter.limit("100/minute")
+ async def ingest_telemetry(
++    request: Request,
+     payload: TelemetryPayload,
+     db: AsyncSession = Depends(get_db),
+ ):
+@@ -87,7 +93,9 @@ async def ingest_telemetry(
+ 
+ 
+ @router.get("/{asset_id}", response_model=List[TelemetryResponse])
++@limiter.limit("100/minute")
+ async def get_telemetry(
++    request: Request,
+     asset_id: UUID,
+     limit: int = 100,
+     verified_only: bool = True,
+@@ -105,7 +113,9 @@ async def get_telemetry(
+ 
+ 
+ @router.get("/{asset_id}/summary")
++@limiter.limit("100/minute")
+ async def get_telemetry_summary(
++    request: Request,
+     asset_id: UUID,
+     db: AsyncSession = Depends(get_db),
+ ):
+diff --git a/backend/app/services/tpm_verify.py b/backend/app/services/tpm_verify.py
+index 48c9b9c..47f5b50 100644
+--- a/backend/app/services/tpm_verify.py
++++ b/backend/app/services/tpm_verify.py
+@@ -12,9 +12,13 @@ from typing import Optional
+ from cryptography.hazmat.primitives import hashes, serialization
+ from cryptography.hazmat.primitives.asymmetric import ec, utils
+ from cryptography.exceptions import InvalidSignature
++from cachetools import TTLCache
+ 
+ logger = logging.getLogger(__name__)
+ 
++# Cache signature hashes for 5 minutes (300s) to prevent replay attacks
++_signature_cache = TTLCache(maxsize=10000, ttl=300)
++
+ 
+ def verify_tpm_signature(
+     raw_payload: dict,
+@@ -39,6 +43,18 @@ def verify_tpm_signature(
+     if not public_key_pem:
+         logger.error("No TPM public key provided")
+         return False
++        
++    if not (public_key_pem.strip().startswith("-----BEGIN PUBLIC KEY-----") and 
++            public_key_pem.strip().endswith("-----END PUBLIC KEY-----")):
++        logger.error("Invalid TPM public key format")
++        return False
++
++    # Anti-replay protection
++    signature_hash = hashlib.sha256(signature_hex.encode('utf-8')).hexdigest()
++    if signature_hash in _signature_cache:
++        logger.warning("TPM signature replay detected")
++        return False
++    _signature_cache[signature_hash] = True
+ 
+     # Timestamp verification
+     timestamp_str = raw_payload.get("timestamp")
+diff --git a/backend/check_assets.py b/backend/check_assets.py
+index 0f1db2a..3422b1f 100644
+--- a/backend/check_assets.py
++++ b/backend/check_assets.py
+@@ -1,29 +1,39 @@
+ import asyncio
+-from app.database import AsyncSessionLocal
+-from app.models import Asset
+-from sqlalchemy import select, delete
++import logging
++from sqlalchemy import text
++from app.database import engine
++from app.logger import setup_logging
++import logging
++
++setup_logging()
++logger = logging.getLogger(__name__)
++
++logger = logging.getLogger(__name__)
+ 
+ async def check():
+-    async with AsyncSessionLocal() as session:
+-        result = await session.execute(select(Asset))
+-        assets = result.scalars().all()
+-        print("Total assets:", len(assets))
++    async with engine.begin() as conn:
++        result = await conn.execute(text("SELECT id, name, asset_type, status FROM assets"))
++        assets = result.all()
++        logger.info(f"Total assets: {len(assets)}")
+         
+-        seen = set()
++        seen_names = set()
+         duplicates = []
++        
+         for a in assets:
+-            if a.name in seen:
++            if a.name in seen_names:
+                 duplicates.append(a.id)
+             else:
+-                seen.add(a.name)
+-                print(f"Name: {a.name}, Type: {a.asset_type}, Status: {a.status}")
++                seen_names.add(a.name)
++                logger.info(f"Name: {a.name}, Type: {a.asset_type}, Status: {a.status}")
+                 
+         if duplicates:
+-            print(f"Deleting {len(duplicates)} duplicates...")
+-            await session.execute(delete(Asset).where(Asset.id.in_(duplicates)))
+-            await session.commit()
+-            print("Duplicates deleted.")
++            logger.info(f"Deleting {len(duplicates)} duplicates...")
++            await conn.execute(
++                text("DELETE FROM assets WHERE id = ANY(:ids)"),
++                {"ids": duplicates}
++            )
++            logger.info("Duplicates deleted.")
+         else:
+-            print("No duplicates found.")
++            logger.info("No duplicates found.")
+ 
+ asyncio.run(check())
+diff --git a/backend/init_db.py b/backend/init_db.py
+index de67a7a..563cc92 100644
+--- a/backend/init_db.py
++++ b/backend/init_db.py
+@@ -5,12 +5,18 @@ from app.database import engine, Base
+ # Import all models to ensure they are registered with Base.metadata
+ from app.models import Asset, BillingCycle, TelemetryLog, YieldCalculation
+ 
++from app.logger import setup_logging
++import logging
++
++setup_logging()
++logger = logging.getLogger(__name__)
++
+ async def init_db():
+-    print("Dropping and recreating database tables...")
++    logger.info("Dropping and recreating database tables...")
+     async with engine.begin() as conn:
+         await conn.run_sync(Base.metadata.drop_all)
+         await conn.run_sync(Base.metadata.create_all)
+-    print("Database tables initialized successfully!")
++    logger.info("Database tables initialized successfully!")
+ 
+ if __name__ == "__main__":
+     asyncio.run(init_db())
+diff --git a/backend/requirements.txt b/backend/requirements.txt
+index 43fdde9..4d15e8d 100644
+--- a/backend/requirements.txt
++++ b/backend/requirements.txt
+@@ -11,3 +11,5 @@ httpx>=0.27.0
+ apscheduler>=3.10.0
+ alembic>=1.13.0
+ google-genai>=0.2.0
++cachetools>=5.3.0
++slowapi>=0.1.9
+diff --git a/backend/test_connection.py b/backend/test_connection.py
+index 99a0dee..a8fa46e 100644
+--- a/backend/test_connection.py
++++ b/backend/test_connection.py
+@@ -1,6 +1,11 @@
+ import asyncio
+ import asyncpg
+ import urllib.parse
++from app.logger import setup_logging
++import logging
++
++setup_logging()
++logger = logging.getLogger(__name__)
+ 
+ regions = [
+     "us-east-1", "us-east-2", "us-west-1", "us-west-2",
+@@ -30,25 +35,25 @@ async def test_region(region):
+             timeout=4
+         )
+         await conn.close()
+-        print(f"🎉 SUCCESS: Connected using region {region}!")
++        logger.info(f"🎉 SUCCESS: Connected using region {region}!")
+         return region
+     except Exception as e:
+         err_msg = str(e)
+         if "tenant/user" not in err_msg:
+             # If the error is password incorrect or something else, the tenant WAS found!
+-            print(f"👉 TENANT FOUND in {region} but failed: {err_msg}")
++            logger.info(f"👉 TENANT FOUND in {region} but failed: {err_msg}")
+             return region
+         # If it's tenant not found, do nothing
+         return None
+ 
+ async def main():
+-    print("Starting region discovery...")
++    logger.info("Starting region discovery...")
+     tasks = [test_region(r) for r in regions]
+     results = await asyncio.gather(*tasks)
+     found = [r for r in results if r is not None]
+     if found:
+-        print(f"Found working regions: {found}")
++        logger.info(f"Found working regions: {found}")
+     else:
+-        print("No regions matched.")
++        logger.info("No regions matched.")
+ 
+ asyncio.run(main())
+diff --git a/contracts/foundry.toml b/contracts/foundry.toml
+index 885852a..ed1d39d 100644
+--- a/contracts/foundry.toml
++++ b/contracts/foundry.toml
+@@ -4,5 +4,7 @@ out = "out"
+ libs = ["lib"]
+ optimizer = true
+ optimizer_runs = 200
++evm_version = "paris"
++solc_version = "0.8.20"
+ 
+ # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+diff --git a/contracts/src/compliance/AutoKYC.sol b/contracts/src/compliance/AutoKYC.sol
+index 53053b4..0ce55e0 100644
+--- a/contracts/src/compliance/AutoKYC.sol
++++ b/contracts/src/compliance/AutoKYC.sol
+@@ -2,18 +2,21 @@
+ pragma solidity ^0.8.20;
+ 
+ import "./IdentityRegistry.sol";
++import "@openzeppelin/contracts/access/Ownable.sol";
+ 
+-contract AutoKYC {
++contract AutoKYC is Ownable {
+     IdentityRegistry public identityRegistry;
+ 
+-    constructor(address _identityRegistry) {
++    constructor(address _identityRegistry) Ownable(msg.sender) {
++        require(_identityRegistry != address(0), "IdentityRegistry cannot be zero address");
+         identityRegistry = IdentityRegistry(_identityRegistry);
+     }
+ 
+     // In a production environment, this is ONLY callable by an authorized backend
+     // after a user passes a real KYC/AML check.
+-    function verifyAddress(address user) external {
+-        // TODO: add onlyOwner modifier when integrated with real auth backend
++    function verifyAddress(address user) external onlyOwner {
++        require(user != address(0), "Cannot verify zero address");
++        
+         if (identityRegistry.identityOf(user) == address(0)) {
+             identityRegistry.registerIdentity(user, user);
+         }
+diff --git a/contracts/src/compliance/IdentityRegistry.sol b/contracts/src/compliance/IdentityRegistry.sol
+index 394ea5d..7a31519 100644
+--- a/contracts/src/compliance/IdentityRegistry.sol
++++ b/contracts/src/compliance/IdentityRegistry.sol
+@@ -26,18 +26,22 @@ contract IdentityRegistry is Ownable {
+     }
+ 
+     function registerIdentity(address userAddress, address identity) external onlyOwner {
++        require(userAddress != address(0), "Invalid user address");
++        require(identity != address(0), "Invalid identity address");
+         require(_identities[userAddress] == address(0), "Identity already registered");
+         _identities[userAddress] = identity;
+         emit IdentityRegistered(userAddress, identity);
+     }
+ 
+     function verifyIdentity(address userAddress) external onlyOwner {
++        require(userAddress != address(0), "Invalid user address");
+         require(_identities[userAddress] != address(0), "Identity not registered");
+         _verified[userAddress] = true;
+         emit IdentityVerified(userAddress);
+     }
+ 
+     function revokeIdentity(address userAddress) external onlyOwner {
++        require(userAddress != address(0), "Invalid user address");
+         _verified[userAddress] = false;
+         emit IdentityRevoked(userAddress);
+     }
+diff --git a/contracts/src/compliance/TrustedIssuersRegistry.sol b/contracts/src/compliance/TrustedIssuersRegistry.sol
+index 4e601e0..b67aea3 100644
+--- a/contracts/src/compliance/TrustedIssuersRegistry.sol
++++ b/contracts/src/compliance/TrustedIssuersRegistry.sol
+@@ -14,6 +14,7 @@ contract TrustedIssuersRegistry is Ownable {
+     constructor() Ownable(msg.sender) {}
+ 
+     function addTrustedIssuer(address issuer, uint256[] calldata claimTopics) external onlyOwner {
++        require(issuer != address(0), "Invalid issuer address");
+         for (uint256 i = 0; i < claimTopics.length; i++) {
+             _trustedIssuers[issuer][claimTopics[i]] = true;
+         }
+@@ -21,6 +22,7 @@ contract TrustedIssuersRegistry is Ownable {
+     }
+ 
+     function removeTrustedIssuer(address issuer, uint256[] calldata claimTopics) external onlyOwner {
++        require(issuer != address(0), "Invalid issuer address");
+         for (uint256 i = 0; i < claimTopics.length; i++) {
+             _trustedIssuers[issuer][claimTopics[i]] = false;
+         }
+diff --git a/contracts/src/token/RWAToken.sol b/contracts/src/token/RWAToken.sol
+index b801164..4c921d6 100644
+--- a/contracts/src/token/RWAToken.sol
++++ b/contracts/src/token/RWAToken.sol
+@@ -37,11 +37,13 @@ contract RWAToken is ERC20, ERC20Permit, ERC20Votes, Ownable {
+     }
+ 
+     function addAgent(address agent) external onlyOwner {
++        require(agent != address(0), "Invalid agent address");
+         _agents[agent] = true;
+         emit AgentAdded(agent);
+     }
+ 
+     function removeAgent(address agent) external onlyOwner {
++        require(agent != address(0), "Invalid agent address");
+         _agents[agent] = false;
+         emit AgentRemoved(agent);
+     }
+diff --git a/frontend/src/app/admin/page.tsx b/frontend/src/app/admin/page.tsx
+index 8517a1b..c84f6f7 100644
+--- a/frontend/src/app/admin/page.tsx
++++ b/frontend/src/app/admin/page.tsx
+@@ -56,48 +56,9 @@ export default function OperationsPortal() {
+   // --- DASHBOARD TAB STATE ---
+   const queryClient = useQueryClient();
+   const [oraclePayload, setOraclePayload] = useState<string | null>(null);
+-  const [isSlashing, setIsSlashing] = useState(false);
+-  const [isSimulating, setIsSimulating] = useState(false);
+   const [isFetchingOracle, setIsFetchingOracle] = useState(false);
+ 
+-  const simulateMonth = async () => {
+-    if (!activeTelemetryAsset) return;
+-    setIsSimulating(true);
+-    try {
+-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+-      const res = await fetch(`${API_URL}/telemetry/simulate/${activeTelemetryAsset.id}`, {
+-        method: 'POST',
+-      });
+-      if (res.ok) {
+-        queryClient.invalidateQueries({ queryKey: ['telemetrySummary'] });
+-        queryClient.invalidateQueries({ queryKey: ['telemetryLogs'] });
+-        queryClient.invalidateQueries({ queryKey: ['yields'] });
+-        alert("Successfully simulated 1 month of telemetry and generated yield!");
+-      }
+-    } catch (e) {
+-      console.error(e);
+-    }
+-    setIsSimulating(false);
+-  };
+ 
+-  const simulateTampering = async () => {
+-    if (!activeTelemetryAsset) return;
+-    setIsSlashing(true);
+-    try {
+-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+-      const res = await fetch(`${API_URL}/assets/${activeTelemetryAsset.id}`, {
+-        method: 'PATCH',
+-        headers: { 'Content-Type': 'application/json' },
+-        body: JSON.stringify({ stake_slashed: true, operator_stake_balance: 0 }),
+-      });
+-      if (res.ok) {
+-        queryClient.invalidateQueries({ queryKey: ['assets'] });
+-      }
+-    } catch (e) {
+-      console.error(e);
+-    }
+-    setIsSlashing(false);
+-  };
+ 
+   const triggerOracle = async () => {
+     if (!activeTelemetryAsset) return;
+@@ -497,32 +458,7 @@ export default function OperationsPortal() {
+               </div>
+               
+               {/* Admin Controls Area */}
+-              <div className="responsive-grid-3" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)' }}>
+-                <Card style={{ padding: '2rem', border: '1px dashed var(--color-success)', backgroundColor: 'rgba(110,250,95,0.02)' }}>
+-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+-                    <Activity color="var(--color-success)" size={24} />
+-                    <h3 className="text-h2" style={{ color: 'var(--color-success)' }}>Simulate Telemetry</h3>
+-                  </div>
+-                  <p className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+-                    Demo feature: Instantly generate 30 days of mock IoT hardware telemetry to simulate the asset operating normally and generating stablecoin yield.
+-                  </p>
+-                  <Button variant="secondary" onClick={simulateMonth} disabled={isSimulating || !activeTelemetryAsset} style={{ width: '100%', borderColor: 'var(--color-success)', color: 'var(--color-success)' }}>
+-                    {isSimulating ? 'Simulating...' : 'Simulate 1 Month of Telemetry'}
+-                  </Button>
+-                </Card>
+-
+-                <Card style={{ padding: '2rem', border: '1px dashed var(--color-error)' }}>
+-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+-                    <AlertCircle color="var(--color-error)" size={24} />
+-                    <h3 className="text-h2" style={{ color: 'var(--color-error)' }}>Simulate Hardware Fault (TPM)</h3>
+-                  </div>
+-                  <p className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+-                    Demo feature: Simulate a tampered or failing telemetry report from the physical asset's TPM 2.0 sensor (e.g. broken solar inverter). This immediately triggers the smart contract to slash the operator's maintenance bond.
+-                  </p>
+-                  <Button variant="secondary" onClick={simulateTampering} disabled={isSlashing || activeTelemetryAsset?.stake_slashed || !activeTelemetryAsset} style={{ width: '100%', borderColor: 'var(--color-error)', color: 'var(--color-error)' }}>
+-                    {isSlashing ? 'Slashing...' : 'Simulate Fault & Slash Bond'}
+-                  </Button>
+-                </Card>
++              <div className="responsive-grid-1" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)' }}>
+ 
+                 <Card style={{ padding: '2rem', border: '1px dashed var(--color-primary)' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
+diff --git a/frontend/src/app/investor/page.tsx b/frontend/src/app/investor/page.tsx
+index a3323c1..71d077e 100644
+--- a/frontend/src/app/investor/page.tsx
++++ b/frontend/src/app/investor/page.tsx
+@@ -82,18 +82,9 @@ export default function InvestorHub() {
+     if (!address || !activeAsset) return alert("Please connect your wallet and select a valid asset.");
+     if (!payAmount || Number(payAmount) <= 0) return alert("Please enter an amount.");
+ 
+-    // If it's a hardcoded demo asset without a real pool address, simulate the transaction for the presentation
+     if (!activeAsset.poolAddress) {
+-      try {
+-        // Just mock a small delay for realism
+-        await new Promise(resolve => setTimeout(resolve, 1500));
+-        alert(`Swap Complete! You swapped ${payAmount} USDC via the AMM Liquidity Pool.`);
+-        setPayAmount('');
+-        setReceiveAmount('');
+-        return;
+-      } catch (e) {
+-        console.error(e);
+-      }
++      alert("This asset is missing a liquidity pool address for swaps.");
++      return;
+     }
+ 
+     try {
+diff --git a/frontend/src/app/onboarding/page.tsx b/frontend/src/app/onboarding/page.tsx
+index 07c9294..74e88a7 100644
+--- a/frontend/src/app/onboarding/page.tsx
++++ b/frontend/src/app/onboarding/page.tsx
+@@ -26,18 +26,14 @@ export default function Onboarding() {
+     setStatus('submitting');
+     
+     try {
+-      const txHash = await writeContractAsync({
+-        address: CONTRACT_ADDRESSES.AutoKYC as `0x${string}`,
+-        abi: AutoKYC_ABI,
+-        functionName: 'verifyMe',
+-      });
+-      if (publicClient) {
+-        await publicClient.waitForTransactionReceipt({ hash: txHash });
+-      }
++      // In production, this would call the backend API to trigger KYC provider validation
++      // followed by an authorized backend signature/call to AutoKYC.verifyAddress().
++      // For this demo, we mock the backend approval delay.
++      await new Promise(resolve => setTimeout(resolve, 2000));
+       setStatus('success');
+     } catch (error) {
+       console.error(error);
+-      alert('Transaction failed or was rejected.');
++      alert('Verification failed or was rejected.');
+       setStatus('idle');
+     }
+   };
+diff --git a/frontend/src/lib/contracts.ts b/frontend/src/lib/contracts.ts
+index 2c8c1fe..ad575a1 100644
+--- a/frontend/src/lib/contracts.ts
++++ b/frontend/src/lib/contracts.ts
+@@ -1,6 +1,6 @@
+ 
+ export const MockUSDC_ABI = [{"type":"constructor","inputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"allowance","inputs":[{"name":"owner","type":"address","internalType":"address"},{"name":"spender","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"approve","inputs":[{"name":"spender","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},{"type":"function","name":"balanceOf","inputs":[{"name":"account","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"buyWithUZHETH","inputs":[],"outputs":[],"stateMutability":"payable"},{"type":"function","name":"decimals","inputs":[],"outputs":[{"name":"","type":"uint8","internalType":"uint8"}],"stateMutability":"view"},{"type":"function","name":"mint","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"amount","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"name","inputs":[],"outputs":[{"name":"","type":"string","internalType":"string"}],"stateMutability":"view"},{"type":"function","name":"symbol","inputs":[],"outputs":[{"name":"","type":"string","internalType":"string"}],"stateMutability":"view"},{"type":"function","name":"totalSupply","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},{"type":"function","name":"transferFrom","inputs":[{"name":"from","type":"address","internalType":"address"},{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},{"type":"event","name":"Approval","inputs":[{"name":"owner","type":"address","indexed":true,"internalType":"address"},{"name":"spender","type":"address","indexed":true,"internalType":"address"},{"name":"value","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"name":"from","type":"address","indexed":true,"internalType":"address"},{"name":"to","type":"address","indexed":true,"internalType":"address"},{"name":"value","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"error","name":"ERC20InsufficientAllowance","inputs":[{"name":"spender","type":"address","internalType":"address"},{"name":"allowance","type":"uint256","internalType":"uint256"},{"name":"needed","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"ERC20InsufficientBalance","inputs":[{"name":"sender","type":"address","internalType":"address"},{"name":"balance","type":"uint256","internalType":"uint256"},{"name":"needed","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"ERC20InvalidApprover","inputs":[{"name":"approver","type":"address","internalType":"address"}]},{"type":"error","name":"ERC20InvalidReceiver","inputs":[{"name":"receiver","type":"address","internalType":"address"}]},{"type":"error","name":"ERC20InvalidSender","inputs":[{"name":"sender","type":"address","internalType":"address"}]},{"type":"error","name":"ERC20InvalidSpender","inputs":[{"name":"spender","type":"address","internalType":"address"}]}] as const;
+-export const AutoKYC_ABI = [{"type":"constructor","inputs":[{"name":"_identityRegistry","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"identityRegistry","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IdentityRegistry"}],"stateMutability":"view"},{"type":"function","name":"verifyAddress","inputs":[{"name":"user","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"verifyMe","inputs":[],"outputs":[],"stateMutability":"nonpayable"}] as const;
++export const AutoKYC_ABI = [{"inputs":[{"internalType":"address","name":"_identityRegistry","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"type":"error","name":"OwnableInvalidOwner"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"type":"error","name":"OwnableUnauthorizedAccount"},{"inputs":[{"internalType":"address","name":"previousOwner","type":"address","indexed":true},{"internalType":"address","name":"newOwner","type":"address","indexed":true}],"type":"event","name":"OwnershipTransferred","anonymous":false},{"inputs":[],"stateMutability":"view","type":"function","name":"identityRegistry","outputs":[{"internalType":"contract IdentityRegistry","name":"","type":"address"}]},{"inputs":[],"stateMutability":"view","type":"function","name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}]},{"inputs":[],"stateMutability":"nonpayable","type":"function","name":"renounceOwnership"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"transferOwnership"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"stateMutability":"nonpayable","type":"function","name":"verifyAddress"}] as const;
+ export const RWAToken_ABI = [{"type":"constructor","inputs":[{"name":"name_","type":"string","internalType":"string"},{"name":"symbol_","type":"string","internalType":"string"},{"name":"_identityRegistry","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"CLOCK_MODE","inputs":[],"outputs":[{"name":"","type":"string","internalType":"string"}],"stateMutability":"view"},{"type":"function","name":"DOMAIN_SEPARATOR","inputs":[],"outputs":[{"name":"","type":"bytes32","internalType":"bytes32"}],"stateMutability":"view"},{"type":"function","name":"addAgent","inputs":[{"name":"agent","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"allowance","inputs":[{"name":"owner","type":"address","internalType":"address"},{"name":"spender","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"approve","inputs":[{"name":"spender","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},{"type":"function","name":"balanceOf","inputs":[{"name":"account","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"burn","inputs":[{"name":"from","type":"address","internalType":"address"},{"name":"amount","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"checkpoints","inputs":[{"name":"account","type":"address","internalType":"address"},{"name":"pos","type":"uint32","internalType":"uint32"}],"outputs":[{"name":"","type":"tuple","internalType":"struct Checkpoints.Checkpoint208","components":[{"name":"_key","type":"uint48","internalType":"uint48"},{"name":"_value","type":"uint208","internalType":"uint208"}]}],"stateMutability":"view"},{"type":"function","name":"clock","inputs":[],"outputs":[{"name":"","type":"uint48","internalType":"uint48"}],"stateMutability":"view"},{"type":"function","name":"decimals","inputs":[],"outputs":[{"name":"","type":"uint8","internalType":"uint8"}],"stateMutability":"view"},{"type":"function","name":"delegate","inputs":[{"name":"delegatee","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"delegateBySig","inputs":[{"name":"delegatee","type":"address","internalType":"address"},{"name":"nonce","type":"uint256","internalType":"uint256"},{"name":"expiry","type":"uint256","internalType":"uint256"},{"name":"v","type":"uint8","internalType":"uint8"},{"name":"r","type":"bytes32","internalType":"bytes32"},{"name":"s","type":"bytes32","internalType":"bytes32"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"delegates","inputs":[{"name":"account","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"eip712Domain","inputs":[],"outputs":[{"name":"fields","type":"bytes1","internalType":"bytes1"},{"name":"name","type":"string","internalType":"string"},{"name":"version","type":"string","internalType":"string"},{"name":"chainId","type":"uint256","internalType":"uint256"},{"name":"verifyingContract","type":"address","internalType":"address"},{"name":"salt","type":"bytes32","internalType":"bytes32"},{"name":"extensions","type":"uint256[]","internalType":"uint256[]"}],"stateMutability":"view"},{"type":"function","name":"forcedTransfer","inputs":[{"name":"from","type":"address","internalType":"address"},{"name":"to","type":"address","internalType":"address"},{"name":"amount","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"getPastTotalSupply","inputs":[{"name":"timepoint","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"getPastVotes","inputs":[{"name":"account","type":"address","internalType":"address"},{"name":"timepoint","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"getVotes","inputs":[{"name":"account","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"identityRegistry","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IdentityRegistry"}],"stateMutability":"view"},{"type":"function","name":"mint","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"amount","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"name","inputs":[],"outputs":[{"name":"","type":"string","internalType":"string"}],"stateMutability":"view"},{"type":"function","name":"nonces","inputs":[{"name":"owner","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"numCheckpoints","inputs":[{"name":"account","type":"address","internalType":"address"}],"outputs":[{"name":"","type":"uint32","internalType":"uint32"}],"stateMutability":"view"},{"type":"function","name":"owner","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"permit","inputs":[{"name":"owner","type":"address","internalType":"address"},{"name":"spender","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"},{"name":"deadline","type":"uint256","internalType":"uint256"},{"name":"v","type":"uint8","internalType":"uint8"},{"name":"r","type":"bytes32","internalType":"bytes32"},{"name":"s","type":"bytes32","internalType":"bytes32"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"removeAgent","inputs":[{"name":"agent","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"renounceOwnership","inputs":[],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"setAddressFrozen","inputs":[{"name":"user","type":"address","internalType":"address"},{"name":"status","type":"bool","internalType":"bool"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"symbol","inputs":[],"outputs":[{"name":"","type":"string","internalType":"string"}],"stateMutability":"view"},{"type":"function","name":"totalSupply","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},{"type":"function","name":"transferFrom","inputs":[{"name":"from","type":"address","internalType":"address"},{"name":"to","type":"address","internalType":"address"},{"name":"value","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},{"type":"function","name":"transferOwnership","inputs":[{"name":"newOwner","type":"address","internalType":"address"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"updateUsageRate","inputs":[{"name":"newRate","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"usageRate","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"event","name":"AddressFrozen","inputs":[{"name":"user","type":"address","indexed":true,"internalType":"address"},{"name":"status","type":"bool","indexed":false,"internalType":"bool"}],"anonymous":false},{"type":"event","name":"AgentAdded","inputs":[{"name":"agent","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"AgentRemoved","inputs":[{"name":"agent","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"Approval","inputs":[{"name":"owner","type":"address","indexed":true,"internalType":"address"},{"name":"spender","type":"address","indexed":true,"internalType":"address"},{"name":"value","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"DelegateChanged","inputs":[{"name":"delegator","type":"address","indexed":true,"internalType":"address"},{"name":"fromDelegate","type":"address","indexed":true,"internalType":"address"},{"name":"toDelegate","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"DelegateVotesChanged","inputs":[{"name":"delegate","type":"address","indexed":true,"internalType":"address"},{"name":"previousVotes","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"newVotes","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"EIP712DomainChanged","inputs":[],"anonymous":false},{"type":"event","name":"ForcedTransfer","inputs":[{"name":"from","type":"address","indexed":true,"internalType":"address"},{"name":"to","type":"address","indexed":true,"internalType":"address"},{"name":"amount","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"name":"previousOwner","type":"address","indexed":true,"internalType":"address"},{"name":"newOwner","type":"address","indexed":true,"internalType":"address"}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"name":"from","type":"address","indexed":true,"internalType":"address"},{"name":"to","type":"address","indexed":true,"internalType":"address"},{"name":"value","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"UsageRateUpdated","inputs":[{"name":"newRate","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"error","name":"CheckpointUnorderedInsertion","inputs":[]},{"type":"error","name":"ECDSAInvalidSignature","inputs":[]},{"type":"error","name":"ECDSAInvalidSignatureLength","inputs":[{"name":"length","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"ECDSAInvalidSignatureS","inputs":[{"name":"s","type":"bytes32","internalType":"bytes32"}]},{"type":"error","name":"ERC20ExceededSafeSupply","inputs":[{"name":"increasedSupply","type":"uint256","internalType":"uint256"},{"name":"cap","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"ERC20InsufficientAllowance","inputs":[{"name":"spender","type":"address","internalType":"address"},{"name":"allowance","type":"uint256","internalType":"uint256"},{"name":"needed","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"ERC20InsufficientBalance","inputs":[{"name":"sender","type":"address","internalType":"address"},{"name":"balance","type":"uint256","internalType":"uint256"},{"name":"needed","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"ERC20InvalidApprover","inputs":[{"name":"approver","type":"address","internalType":"address"}]},{"type":"error","name":"ERC20InvalidReceiver","inputs":[{"name":"receiver","type":"address","internalType":"address"}]},{"type":"error","name":"ERC20InvalidSender","inputs":[{"name":"sender","type":"address","internalType":"address"}]},{"type":"error","name":"ERC20InvalidSpender","inputs":[{"name":"spender","type":"address","internalType":"address"}]},{"type":"error","name":"ERC2612ExpiredSignature","inputs":[{"name":"deadline","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"ERC2612InvalidSigner","inputs":[{"name":"signer","type":"address","internalType":"address"},{"name":"owner","type":"address","internalType":"address"}]},{"type":"error","name":"ERC5805FutureLookup","inputs":[{"name":"timepoint","type":"uint256","internalType":"uint256"},{"name":"clock","type":"uint48","internalType":"uint48"}]},{"type":"error","name":"ERC6372InconsistentClock","inputs":[]},{"type":"error","name":"InvalidAccountNonce","inputs":[{"name":"account","type":"address","internalType":"address"},{"name":"currentNonce","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"InvalidShortString","inputs":[]},{"type":"error","name":"OwnableInvalidOwner","inputs":[{"name":"owner","type":"address","internalType":"address"}]},{"type":"error","name":"OwnableUnauthorizedAccount","inputs":[{"name":"account","type":"address","internalType":"address"}]},{"type":"error","name":"SafeCastOverflowedUintDowncast","inputs":[{"name":"bits","type":"uint8","internalType":"uint8"},{"name":"value","type":"uint256","internalType":"uint256"}]},{"type":"error","name":"StringTooLong","inputs":[{"name":"str","type":"string","internalType":"string"}]},{"type":"error","name":"VotesExpiredSignature","inputs":[{"name":"expiry","type":"uint256","internalType":"uint256"}]}] as const;
+ export const RWAFactory_ABI = [{"type":"constructor","inputs":[{"name":"_identityRegistry","type":"address","internalType":"address"},{"name":"_wCBDC","type":"address","internalType":"address"},{"name":"_governorFactory","type":"address","internalType":"address"},{"name":"_poolFactory","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"createAsset","inputs":[{"name":"name","type":"string","internalType":"string"},{"name":"symbol","type":"string","internalType":"string"},{"name":"initialSupply","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"deployedAssetsData","inputs":[{"name":"","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"tokenAddress","type":"address","internalType":"address"},{"name":"name","type":"string","internalType":"string"},{"name":"symbol","type":"string","internalType":"string"},{"name":"governorAddress","type":"address","internalType":"address"},{"name":"poolAddress","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"function","name":"getAllAssetsData","inputs":[],"outputs":[{"name":"","type":"tuple[]","internalType":"struct RWAFactory.AssetData[]","components":[{"name":"tokenAddress","type":"address","internalType":"address"},{"name":"name","type":"string","internalType":"string"},{"name":"symbol","type":"string","internalType":"string"},{"name":"governorAddress","type":"address","internalType":"address"},{"name":"poolAddress","type":"address","internalType":"address"}]}],"stateMutability":"view"},{"type":"function","name":"governorFactory","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract GovernorFactory"}],"stateMutability":"view"},{"type":"function","name":"identityRegistry","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IdentityRegistry"}],"stateMutability":"view"},{"type":"function","name":"poolFactory","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract PoolFactory"}],"stateMutability":"view"},{"type":"function","name":"wCBDC","inputs":[],"outputs":[{"name":"","type":"address","internalType":"address"}],"stateMutability":"view"},{"type":"event","name":"AssetCreated","inputs":[{"name":"assetAddress","type":"address","indexed":true,"internalType":"address"},{"name":"governorAddress","type":"address","indexed":false,"internalType":"address"},{"name":"poolAddress","type":"address","indexed":false,"internalType":"address"},{"name":"name","type":"string","indexed":false,"internalType":"string"},{"name":"symbol","type":"string","indexed":false,"internalType":"string"},{"name":"creator","type":"address","indexed":true,"internalType":"address"}],"anonymous":false}] as const;
+ export const RWALiquidityPool_ABI = [{"type":"constructor","inputs":[{"name":"_rwaToken","type":"address","internalType":"address"},{"name":"_wCBDC","type":"address","internalType":"address"}],"stateMutability":"nonpayable"},{"type":"function","name":"addLiquidity","inputs":[{"name":"amountRWA","type":"uint256","internalType":"uint256"},{"name":"amountWCBDC","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"getSwapAmountOut","inputs":[{"name":"tokenIn","type":"address","internalType":"address"},{"name":"amountIn","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"reserveRWA","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"reserveWCBDC","inputs":[],"outputs":[{"name":"","type":"uint256","internalType":"uint256"}],"stateMutability":"view"},{"type":"function","name":"rwaToken","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IERC20"}],"stateMutability":"view"},{"type":"function","name":"swap","inputs":[{"name":"tokenIn","type":"address","internalType":"address"},{"name":"amountIn","type":"uint256","internalType":"uint256"}],"outputs":[],"stateMutability":"nonpayable"},{"type":"function","name":"wCBDC","inputs":[],"outputs":[{"name":"","type":"address","internalType":"contract IERC20"}],"stateMutability":"view"},{"type":"event","name":"AddLiquidity","inputs":[{"name":"provider","type":"address","indexed":true,"internalType":"address"},{"name":"amountRWA","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amountWCBDC","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"event","name":"Swap","inputs":[{"name":"user","type":"address","indexed":true,"internalType":"address"},{"name":"tokenIn","type":"address","indexed":false,"internalType":"address"},{"name":"amountIn","type":"uint256","indexed":false,"internalType":"uint256"},{"name":"amountOut","type":"uint256","indexed":false,"internalType":"uint256"}],"anonymous":false},{"type":"error","name":"ReentrancyGuardReentrantCall","inputs":[]}] as const;

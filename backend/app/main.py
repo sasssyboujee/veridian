@@ -9,18 +9,31 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.routers import assets, telemetry, yields
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
-)
+from app.logger import setup_logging
+setup_logging()
 logger = logging.getLogger(__name__)
 
+
+import sys
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from pydantic import ValidationError
+
+limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan handler for startup/shutdown."""
     logger.info("🚀 RWA Escrow Backend starting up...")
-    settings = get_settings()
+    try:
+        settings = get_settings()
+        if not settings.gemini_api_key or not settings.database_url or not settings.cors_origins or not settings.redis_url or not settings.rpc_url:
+            raise ValueError("Empty required setting detected.")
+    except (ValidationError, ValueError) as e:
+        logger.critical(f"CRITICAL BOOT FAILURE: Missing or invalid environment variable. Details: {e}")
+        sys.exit(1)
+        
     logger.info(f"   Debug mode: {settings.debug}")
     yield
     logger.info("🛑 RWA Escrow Backend shutting down...")
@@ -41,6 +54,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.debug else None,
     openapi_url="/openapi.json" if settings.debug else None,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — restrict to allowed origins
 app.add_middleware(

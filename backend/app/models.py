@@ -24,6 +24,7 @@ class Asset(Base):
     jurisdiction = Column(Text, nullable=False, default="US")
     asset_type = Column(Text, nullable=False, default="equipment")
     total_token_supply = Column(Numeric(78, 0))
+    tpm_public_key = Column(Text, nullable=True)
     status = Column(
         Text, nullable=False, default="pending",
     )

@@ -26,18 +26,14 @@ export default function Onboarding() {
     setStatus('submitting');
     
     try {
-      const txHash = await writeContractAsync({
-        address: CONTRACT_ADDRESSES.AutoKYC as `0x${string}`,
-        abi: AutoKYC_ABI,
-        functionName: 'verifyMe',
-      });
-      if (publicClient) {
-        await publicClient.waitForTransactionReceipt({ hash: txHash });
-      }
+      // In production, this would call the backend API to trigger KYC provider validation
+      // followed by an authorized backend signature/call to AutoKYC.verifyAddress().
+      // For this demo, we mock the backend approval delay.
+      await new Promise(resolve => setTimeout(resolve, 2000));
       setStatus('success');
     } catch (error) {
       console.error(error);
-      alert('Transaction failed or was rejected.');
+      alert('Verification failed or was rejected.');
       setStatus('idle');
     }
   };

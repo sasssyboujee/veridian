@@ -14,6 +14,7 @@ contract TrustedIssuersRegistry is Ownable {
     constructor() Ownable(msg.sender) {}
 
     function addTrustedIssuer(address issuer, uint256[] calldata claimTopics) external onlyOwner {
+        require(issuer != address(0), "Invalid issuer address");
         for (uint256 i = 0; i < claimTopics.length; i++) {
             _trustedIssuers[issuer][claimTopics[i]] = true;
         }
@@ -21,6 +22,7 @@ contract TrustedIssuersRegistry is Ownable {
     }
 
     function removeTrustedIssuer(address issuer, uint256[] calldata claimTopics) external onlyOwner {
+        require(issuer != address(0), "Invalid issuer address");
         for (uint256 i = 0; i < claimTopics.length; i++) {
             _trustedIssuers[issuer][claimTopics[i]] = false;
         }

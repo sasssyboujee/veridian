@@ -12,14 +12,22 @@ from typing import Optional
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, utils
 from cryptography.exceptions import InvalidSignature
+from cachetools import TTLCache
+import redis.asyncio as redis
+from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 
+# Redis client for signature cache
+settings = get_settings()
+_redis_client = redis.from_url(settings.redis_url)
 
-def verify_tpm_signature(
+
+async def verify_tpm_signature(
     raw_payload: dict,
     signature_hex: str,
     public_key_pem: Optional[str] = None,
+    expected_public_key: Optional[str] = None,
 ) -> bool:
     """
     Verify an ECDSA signature from a TPM 2.0 / Secure Enclave.
@@ -28,6 +36,7 @@ def verify_tpm_signature(
         raw_payload: The original telemetry data dict.
         signature_hex: Hex-encoded ECDSA signature (DER format).
         public_key_pem: PEM-encoded EC public key.
+        expected_public_key: The registered public key for this asset.
 
     Returns:
         True if the signature is valid, False otherwise.
@@ -39,6 +48,25 @@ def verify_tpm_signature(
     if not public_key_pem:
         logger.error("No TPM public key provided")
         return False
+        
+    if not (public_key_pem.strip().startswith("-----BEGIN PUBLIC KEY-----") and 
+            public_key_pem.strip().endswith("-----END PUBLIC KEY-----")):
+        logger.error("Invalid TPM public key format")
+        return False
+
+    if expected_public_key and expected_public_key.strip() != public_key_pem.strip():
+        logger.error("Provided public key does not match the registered device key")
+        return False
+
+    # Anti-replay protection with Redis
+    signature_hash = hashlib.sha256(signature_hex.encode('utf-8')).hexdigest()
+    cache_key = f"tpm_sig:{signature_hash}"
+    
+    is_replayed = await _redis_client.get(cache_key)
+    if is_replayed:
+        logger.warning("TPM signature replay detected")
+        return False
+    await _redis_client.setex(cache_key, 300, "1")
 
     # Timestamp verification
     timestamp_str = raw_payload.get("timestamp")

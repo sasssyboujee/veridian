@@ -26,18 +26,22 @@ contract IdentityRegistry is Ownable {
     }
 
     function registerIdentity(address userAddress, address identity) external onlyOwner {
+        require(userAddress != address(0), "Invalid user address");
+        require(identity != address(0), "Invalid identity address");
         require(_identities[userAddress] == address(0), "Identity already registered");
         _identities[userAddress] = identity;
         emit IdentityRegistered(userAddress, identity);
     }
 
     function verifyIdentity(address userAddress) external onlyOwner {
+        require(userAddress != address(0), "Invalid user address");
         require(_identities[userAddress] != address(0), "Identity not registered");
         _verified[userAddress] = true;
         emit IdentityVerified(userAddress);
     }
 
     function revokeIdentity(address userAddress) external onlyOwner {
+        require(userAddress != address(0), "Invalid user address");
         _verified[userAddress] = false;
         emit IdentityRevoked(userAddress);
     }

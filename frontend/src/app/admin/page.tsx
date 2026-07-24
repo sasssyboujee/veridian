@@ -56,48 +56,9 @@ export default function OperationsPortal() {
   // --- DASHBOARD TAB STATE ---
   const queryClient = useQueryClient();
   const [oraclePayload, setOraclePayload] = useState<string | null>(null);
-  const [isSlashing, setIsSlashing] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
   const [isFetchingOracle, setIsFetchingOracle] = useState(false);
 
-  const simulateMonth = async () => {
-    if (!activeTelemetryAsset) return;
-    setIsSimulating(true);
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${API_URL}/telemetry/simulate/${activeTelemetryAsset.id}`, {
-        method: 'POST',
-      });
-      if (res.ok) {
-        queryClient.invalidateQueries({ queryKey: ['telemetrySummary'] });
-        queryClient.invalidateQueries({ queryKey: ['telemetryLogs'] });
-        queryClient.invalidateQueries({ queryKey: ['yields'] });
-        alert("Successfully simulated 1 month of telemetry and generated yield!");
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    setIsSimulating(false);
-  };
 
-  const simulateTampering = async () => {
-    if (!activeTelemetryAsset) return;
-    setIsSlashing(true);
-    try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      const res = await fetch(`${API_URL}/assets/${activeTelemetryAsset.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stake_slashed: true, operator_stake_balance: 0 }),
-      });
-      if (res.ok) {
-        queryClient.invalidateQueries({ queryKey: ['assets'] });
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    setIsSlashing(false);
-  };
 
   const triggerOracle = async () => {
     if (!activeTelemetryAsset) return;
@@ -497,32 +458,7 @@ export default function OperationsPortal() {
               </div>
               
               {/* Admin Controls Area */}
-              <div className="responsive-grid-3" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)' }}>
-                <Card style={{ padding: '2rem', border: '1px dashed var(--color-success)', backgroundColor: 'rgba(110,250,95,0.02)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
-                    <Activity color="var(--color-success)" size={24} />
-                    <h3 className="text-h2" style={{ color: 'var(--color-success)' }}>Simulate Telemetry</h3>
-                  </div>
-                  <p className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                    Demo feature: Instantly generate 30 days of mock IoT hardware telemetry to simulate the asset operating normally and generating stablecoin yield.
-                  </p>
-                  <Button variant="secondary" onClick={simulateMonth} disabled={isSimulating || !activeTelemetryAsset} style={{ width: '100%', borderColor: 'var(--color-success)', color: 'var(--color-success)' }}>
-                    {isSimulating ? 'Simulating...' : 'Simulate 1 Month of Telemetry'}
-                  </Button>
-                </Card>
-
-                <Card style={{ padding: '2rem', border: '1px dashed var(--color-error)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
-                    <AlertCircle color="var(--color-error)" size={24} />
-                    <h3 className="text-h2" style={{ color: 'var(--color-error)' }}>Simulate Hardware Fault (TPM)</h3>
-                  </div>
-                  <p className="text-small" style={{ color: 'var(--color-accent)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                    Demo feature: Simulate a tampered or failing telemetry report from the physical asset's TPM 2.0 sensor (e.g. broken solar inverter). This immediately triggers the smart contract to slash the operator's maintenance bond.
-                  </p>
-                  <Button variant="secondary" onClick={simulateTampering} disabled={isSlashing || activeTelemetryAsset?.stake_slashed || !activeTelemetryAsset} style={{ width: '100%', borderColor: 'var(--color-error)', color: 'var(--color-error)' }}>
-                    {isSlashing ? 'Slashing...' : 'Simulate Fault & Slash Bond'}
-                  </Button>
-                </Card>
+              <div className="responsive-grid-1" style={{ marginTop: '3rem', paddingTop: '3rem', borderTop: '1px solid var(--color-neutral)' }}>
 
                 <Card style={{ padding: '2rem', border: '1px dashed var(--color-primary)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>

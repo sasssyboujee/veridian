@@ -8,20 +8,24 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Database
-    database_url: str = "postgresql+asyncpg://localhost:5432/rwa_escrow"
-    database_url_sync: str = "postgresql://localhost:5432/rwa_escrow"
+    database_url: str
+    database_url_sync: str
 
     # API
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     debug: bool = False
-    cors_origins: list[str] = ["https://app.rwa-escrow.com"]
+    cors_origins: list[str]
+
+    # Services
+    redis_url: str
 
     # Oracle / Chainlink
     oracle_api_key: str = ""
-    gemini_api_key: str = ""
+    gemini_api_key: str
 
     # Contract Addresses
+    rpc_url: str
     rwa_token_address: str = ""
     escrow_address: str = ""
     yield_distributor_address: str = ""

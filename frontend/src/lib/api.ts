@@ -1,5 +1,20 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-if (!API_URL) throw new Error("NEXT_PUBLIC_API_URL is not set");
+declare global {
+  interface Window {
+    __ENV__?: {
+      NEXT_PUBLIC_API_URL?: string;
+    };
+  }
+}
+
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && window.__ENV__?.NEXT_PUBLIC_API_URL) {
+    return window.__ENV__.NEXT_PUBLIC_API_URL;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+};
+
+const API_URL = getApiUrl();
+
 
 export interface Asset {
   id: string;

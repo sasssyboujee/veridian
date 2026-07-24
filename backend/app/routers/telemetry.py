@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from app.config import get_settings
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,12 +17,18 @@ from app.services.tpm_verify import verify_tpm_signature
 from app.services.yield_engine import calculate_yield_for_cycle
 from datetime import datetime, timedelta, timezone
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/telemetry", tags=["Telemetry"])
 
 
 @router.post("/", response_model=TelemetryResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("100/minute")
 async def ingest_telemetry(
+    request: Request,
     payload: TelemetryPayload,
     db: AsyncSession = Depends(get_db),
 ):
@@ -44,10 +50,11 @@ async def ingest_telemetry(
         )
 
     # Verify TPM signature — reject if invalid
-    is_verified = verify_tpm_signature(
+    is_verified = await verify_tpm_signature(
         raw_payload=payload.raw_payload,
         signature_hex=payload.tpm_signature,
         public_key_pem=payload.tpm_public_key,
+        expected_public_key=asset.tpm_public_key,
     )
 
     if not is_verified:
@@ -87,7 +94,9 @@ async def ingest_telemetry(
 
 
 @router.get("/{asset_id}", response_model=List[TelemetryResponse])
+@limiter.limit("100/minute")
 async def get_telemetry(
+    request: Request,
     asset_id: UUID,
     limit: int = 100,
     verified_only: bool = True,
@@ -105,7 +114,9 @@ async def get_telemetry(
 
 
 @router.get("/{asset_id}/summary")
+@limiter.limit("100/minute")
 async def get_telemetry_summary(
+    request: Request,
     asset_id: UUID,
     db: AsyncSession = Depends(get_db),
 ):

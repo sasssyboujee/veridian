@@ -1,6 +1,11 @@
 import asyncio
 import asyncpg
 import urllib.parse
+from app.logger import setup_logging
+import logging
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 regions = [
     "us-east-1", "us-east-2", "us-west-1", "us-west-2",
@@ -30,25 +35,25 @@ async def test_region(region):
             timeout=4
         )
         await conn.close()
-        print(f"🎉 SUCCESS: Connected using region {region}!")
+        logger.info(f"🎉 SUCCESS: Connected using region {region}!")
         return region
     except Exception as e:
         err_msg = str(e)
         if "tenant/user" not in err_msg:
             # If the error is password incorrect or something else, the tenant WAS found!
-            print(f"👉 TENANT FOUND in {region} but failed: {err_msg}")
+            logger.info(f"👉 TENANT FOUND in {region} but failed: {err_msg}")
             return region
         # If it's tenant not found, do nothing
         return None
 
 async def main():
-    print("Starting region discovery...")
+    logger.info("Starting region discovery...")
     tasks = [test_region(r) for r in regions]
     results = await asyncio.gather(*tasks)
     found = [r for r in results if r is not None]
     if found:
-        print(f"Found working regions: {found}")
+        logger.info(f"Found working regions: {found}")
     else:
-        print("No regions matched.")
+        logger.info("No regions matched.")
 
 asyncio.run(main())

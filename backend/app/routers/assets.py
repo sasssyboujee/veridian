@@ -4,7 +4,7 @@ import logging
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,12 +12,17 @@ from app.database import get_db
 from app.models import Asset
 from app.schemas import AssetCreate, AssetUpdate, AssetResponse
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
 logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/assets", tags=["Assets"])
 
 
 @router.post("/", response_model=AssetResponse, status_code=status.HTTP_201_CREATED)
-async def create_asset(payload: AssetCreate, db: AsyncSession = Depends(get_db)):
+@limiter.limit("100/minute")
+async def create_asset(request: Request, payload: AssetCreate, db: AsyncSession = Depends(get_db)):
     """Register a new real-world asset."""
     asset = Asset(
         name=payload.name,
@@ -27,6 +32,7 @@ async def create_asset(payload: AssetCreate, db: AsyncSession = Depends(get_db))
         jurisdiction=payload.jurisdiction,
         asset_type=payload.asset_type,
         total_token_supply=payload.total_token_supply,
+        tpm_public_key=payload.tpm_public_key,
         status=payload.status or "pending",
         metadata_=payload.metadata,
     )
@@ -39,7 +45,9 @@ async def create_asset(payload: AssetCreate, db: AsyncSession = Depends(get_db))
 
 
 @router.get("/", response_model=List[AssetResponse])
+@limiter.limit("100/minute")
 async def list_assets(
+    request: Request,
     status_filter: str = None,
     limit: int = 50,
     offset: int = 0,
@@ -55,7 +63,8 @@ async def list_assets(
 
 
 @router.get("/{asset_id}", response_model=AssetResponse)
-async def get_asset(asset_id: UUID, db: AsyncSession = Depends(get_db)):
+@limiter.limit("100/minute")
+async def get_asset(request: Request, asset_id: UUID, db: AsyncSession = Depends(get_db)):
     """Get a specific asset by ID."""
     asset = await db.get(Asset, asset_id)
     if not asset:
@@ -64,7 +73,9 @@ async def get_asset(asset_id: UUID, db: AsyncSession = Depends(get_db)):
 
 
 @router.patch("/{asset_id}", response_model=AssetResponse)
+@limiter.limit("100/minute")
 async def update_asset(
+    request: Request,
     asset_id: UUID,
     payload: AssetUpdate,
     db: AsyncSession = Depends(get_db),
@@ -87,7 +98,8 @@ async def update_asset(
 
 
 @router.delete("/{asset_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_asset(asset_id: UUID, db: AsyncSession = Depends(get_db)):
+@limiter.limit("100/minute")
+async def delete_asset(request: Request, asset_id: UUID, db: AsyncSession = Depends(get_db)):
     """Delete an asset."""
     asset = await db.get(Asset, asset_id)
     if not asset:
