@@ -29,8 +29,7 @@
 \begin{document}
 % =============================================================================
 
-\title{Veridian: Hardware-Attested Fractional Financing of Decentralized
-Solar Infrastructure for Grid-Parity Bypass in South Africa}
+\title{Veridian: A Generalized Cryptoeconomic Lifecycle Architecture for Decentralized Energy Assets}
 
 \author{%
 \IEEEauthorblockN{Kannan Sasinthiran}
@@ -43,340 +42,126 @@ e1121829@u.nus.edu}
 \IEEEauthorblockA{\textit{UZH Blockchain Center}\\University of Zurich\\
 Zurich, Switzerland\\
 alican.alasik@uzh.ch}
+\and
+\IEEEauthorblockN{Tao}
+\IEEEauthorblockA{\textit{UZH Blockchain Center}\\University of Zurich\\
+Zurich, Switzerland}
 }
 
 \maketitle
 
 % =============================================================================
 \begin{abstract}
-South Africa's electricity distribution system is characterised by
-chronic load-shedding, capital-intensive grid infrastructure, and a
-structural inability to extend reliable service to the estimated
-14.7~million households that lack dependable access. Distributed solar
-photovoltaic (PV) generation offers a technically viable alternative;
-however, retail financing constraints and the absence of institutional
-compliance mechanisms prevent mass adoption.
+Decentralized Physical Infrastructure Networks (DePIN) promise to democratize the deployment of hardware infrastructure by aligning the economic interests of investors, operators, and consumers. However, existing energy DePIN protocols struggle to scale into regulated environments due to an absence of formalized trust boundaries between physical hardware, off-chain legal compliance, and on-chain settlement. 
 
-This paper presents \emph{Veridian}, a decentralized physical
-infrastructure network (DePIN) protocol that tokenizes cash-flowing solar
-installations in South Africa under an Equipment-as-a-Service (EaaS)
-model. The protocol combines three mechanisms: (i) hardware-attested
-telemetry from TPM~2.0 solar meters that produce cryptographically signed
-generation records, (ii) ERC-3643 compliant fractional security tokens
-whose transfers are gated by on-chain identity verification, and (iii)
-deterministic USDC yield settlement executed on Optimism Sepolia via a
-3-of-5 multisignature escrow. A strict revenue waterfall allocates
-proceeds as follows: 75\% to token holders, 8\% to operations and
-maintenance, 7\% to an insurance reserve, 5\% to a pool expansion fund,
-and 5\% to platform operations. An end-to-end simulation on a representative
-450~W panel at 5.5 sun-hours per day produces a verifiable net yield of
-20.7\% per annum, which the smart contract suite distributes automatically
-to verified fractional owners without custodial intermediation. The
-architecture is evaluated for its ability to disintermediate Eskom's
-centralized grid monopoly, reduce household energy costs by at least
-10\% relative to regulated tariffs, and provide retail investors with
-compliant, yield-bearing exposure to physical solar infrastructure.
+This paper presents a generalized Cryptoeconomic Lifecycle Architecture for distributed energy assets. We formalize this lifecycle into five distinct stages: Capital Formation, Compliance-Gated Ownership, Attested Telemetry, Deterministic Settlement, and Governance Constraints. For each stage, we provide an explicit mapping of where security is guaranteed by cryptography, economics, law, or plain trust.
+
+To demonstrate the viability of this architecture, we instantiate it via \emph{Veridian}, an Equipment-as-a-Service (EaaS) prototype for retail solar infrastructure in South Africa. The implementation utilizes a 3-of-5 multisignature escrow for capital formation, ERC-3643 tokens for compliance, TPM 2.0 hardware for physical telemetry, and a deterministic 75/8/7/5/5 fee waterfall executing on Optimism Sepolia. An end-to-end simulation of a 450~W solar panel yields a verifiable net investor return of 18.7\% per annum. Finally, we establish the generalizability of the architecture by extending it to peer-to-peer excess battery storage pooling for localized data centers.
 \end{abstract}
 
 \begin{IEEEkeywords}
-blockchain, decentralized physical infrastructure, DePIN, solar energy,
-South Africa, equipment-as-a-service, ERC-3643, real-world asset tokenization,
-TPM 2.0, hardware attestation, yield distribution, Optimism, USDC, multisig
+blockchain, decentralized physical infrastructure, DePIN, energy assets, equipment-as-a-service, ERC-3643, TPM 2.0, real-world assets
 \end{IEEEkeywords}
 
 % =============================================================================
 \section{Introduction}
 % =============================================================================
 
-South Africa's electricity sector presents a confluence of structural
-failure and latent opportunity that is well-suited to blockchain-enabled
-infrastructure finance. Eskom Holdings SOC Ltd., the vertically integrated
-state-owned utility, controls the overwhelming majority of generation,
-transmission, and distribution capacity. Since 2007, Eskom has
-implemented rolling load-shedding protocols, reaching Stage~6 curtailment
-in 2022 and 2023, with cumulative lost economic output estimated by the
-South African Reserve Bank at over R900~billion \cite{nersa2023}. The
-World Bank estimates that 14.7~million South Africans lack reliable
-electricity access, with peri-urban and rural communities disproportionately
-affected \cite{worldbank2023}.
+The integration of blockchain technology into the energy sector has primarily focused on peer-to-peer (P2P) trading of generated capacity \cite{pop2018peer,andoni2019blockchain}. More recently, Decentralized Physical Infrastructure Networks (DePIN) have emerged as an architectural pattern to coordinate the deployment of the physical hardware itself through on-chain incentive structures \cite{lin2024depin}. 
 
-The solar resource across South Africa averages between 4.5 and
-6.5~kWh~m$^{-2}$~day$^{-1}$ of Global Horizontal Irradiance (GHI),
-placing the country among the highest-irradiance jurisdictions globally
-\cite{saws2023solar,irena2022south_africa}. This resource is geographically
-distributed and does not require transmission infrastructure to reach
-end-users when harnessed at the household or community scale. Rooftop and
-ground-mounted solar PV systems of 450~W to 10~kW capacity are technically
-adequate to offset the average South African household consumption of
-approximately 897~kWh per month \cite{eskom2024tariff}.
+Applied to energy infrastructure, DePIN protocols can theoretically align the economic interests of equipment investors, field operators, and energy consumers without a central coordinating entity. However, existing energy DePIN protocols (e.g., Power Ledger, SolarCoin) exhibit a critical weakness: they often conflate the trust assumptions required at different stages of the asset lifecycle. They rely on software-reported metrics or grid-metered totals (an unresolved oracle problem at the physical layer) while utilizing permissionless tokens that preclude regulated, compliance-gated fractional investment.
 
-Despite favorable resource conditions, retail solar adoption is constrained
-by two structural barriers. First, the upfront capital cost of a
-complete 450~W panel system (approximately R6,750 in 2024) is prohibitive
-for the median South African household income. Second, retail investors
-seeking exposure to distributed solar infrastructure have no regulated,
-liquid, and transparent mechanism to participate without deploying
-project-scale capital.
+To mature from localized prototypes into globally scalable infrastructure financing systems, DePIN protocols require an honest, explicit map of trust boundaries. We argue that the contribution required by the field is not simply another tokenization platform, but rather a unified framework that accounts for which stage of an asset's life is secured by cryptography, which by economics, which by law, and which by plain trust.
 
-The Equipment-as-a-Service (EaaS) model addresses the first barrier by
-converting the capital expenditure of solar acquisition into a per-unit
-consumption fee paid by the household, analogous to a utility subscription.
-Prior work on peer-to-peer energy trading \cite{pop2018peer,andoni2019blockchain}
-has demonstrated the technical feasibility of blockchain-mediated energy
-markets; however, these systems typically address bilateral settlement
-between grid-connected prosumers rather than providing a compliant
-fractional financing layer for the physical equipment itself.
-
-Decentralized Physical Infrastructure Network (DePIN) protocols represent
-a recent architectural pattern that coordinates the deployment and
-operation of physical infrastructure through on-chain incentive structures
-\cite{zhang2022depin}. Applied to energy infrastructure, a DePIN protocol
-can theoretically align the economic interests of equipment investors,
-field operators, and energy consumers without a central coordinating
-entity. Two specific research gaps remain open in this domain. First,
-existing DePIN energy protocols (e.g., Power Ledger, SolarCoin) do not
-incorporate hardware-level attestation of physical generation data;
-they rely on software-reported metrics or grid-metered totals, creating
-an unresolved oracle problem at the physical layer. Second, no published
-implementation combines compliance-gated fractional securities (as
-required for regulated investment products) with automated yield
-settlement in a developing-market context where centralized grid
-reliability is structurally inadequate.
-
-This paper addresses both gaps through two primary contributions:
+This paper addresses this gap by proposing a generalized \emph{Cryptoeconomic Lifecycle Architecture} for decentralized energy assets. The primary contributions are:
 
 \begin{enumerate}
-  \item \textbf{End-to-end trust chain from physical attestation to
-    regulated settlement.} The Veridian protocol specifies a verifiable
-    pipeline in which TPM~2.0 hardware-signed telemetry propagates
-    through an off-chain yield engine to an ERC-3643 compliant on-chain
-    distribution contract. The architectural contribution is the formal
-    linkage between physical hardware attestation and compliance-gated
-    token settlement, which no existing DePIN protocol provides.
-  \item \textbf{Oracle-referenced governance constraint for consumer
-    protection.} The protocol introduces an on-chain price cap mechanism
-    ($P_{\text{proposed}} \leq 0.90 \times P_{\text{grid}}$) that
-    prevents investor-captured DAOs from imposing extractive pricing on
-    energy consumers. This is a novel governance design contribution
-    that addresses an unsolved incentive alignment problem in DePIN
-    protocol governance.
+  \item \textbf{The Lifecycle Architecture and Trust Boundary Map.} We define a five-stage framework (Capital Formation, Compliance-Gated Ownership, Attested Telemetry, Deterministic Settlement, and Governance Constraints) and explicitly map the trust dependencies across physical, legal, and on-chain execution layers.
+  \item \textbf{A Reference Instantiation (Veridian).} We validate the architecture through the implementation and economic simulation of Veridian, a prototype applying this lifecycle to solar Equipment-as-a-Service (EaaS) financing in South Africa.
 \end{enumerate}
 
-Supporting these contributions, the paper provides: (a) a parameterized
-economic model of a 450~W South African solar installation producing a
-base-case net yield of 20.7\% per annum with sensitivity analysis across
-irradiance and degradation scenarios, (b) a formal definition of the
-75/8/7/5/5 revenue waterfall and 3-of-5 multisignature escrow mechanics,
-and (c) a gas cost analysis comparing push and pull distribution patterns
-on Optimism.
-
-The remainder of this paper is structured as follows. Section~\ref{sec:background}
-reviews related work on blockchain-based energy systems and DePIN
-architectures. Section~\ref{sec:architecture} describes the three-layer
-Veridian protocol architecture. Section~\ref{sec:economic} presents the
-economic model and revenue waterfall. Section~\ref{sec:implementation}
-describes the implementation and simulation results.
-Section~\ref{sec:evaluation} evaluates the system against security,
-scalability, and compliance requirements. Section~\ref{sec:conclusion}
-concludes.
+The remainder of this paper is structured as follows. Section~\ref{sec:architecture} introduces the generalized Cryptoeconomic Lifecycle Architecture. Section~\ref{sec:instantiation} details the Veridian solar instantiation. Section~\ref{sec:economic} presents the economic model and simulation results. Section~\ref{sec:generalizability} explores the generalizability of the architecture to advanced use-cases, specifically battery storage pooling for data centers. Section~\ref{sec:evaluation} evaluates the trust model and compares it to existing protocols. Section~\ref{sec:conclusion} concludes.
 
 % =============================================================================
-\section{Background and Related Work}
-\label{sec:background}
-% =============================================================================
-
-\subsection{Blockchain-Based Energy Markets}
-
-Andoni et al.\ \cite{andoni2019blockchain} provide a systematic review of
-blockchain applications in the energy sector, identifying peer-to-peer
-energy trading, grid management, and carbon credit tokenization as the
-dominant use-cases. Power Ledger, one of the earliest production
-deployments, enables bilateral energy trading between grid-connected
-prosumers using a dual-token model. However, Power Ledger and similar
-systems presuppose functioning grid interconnection and do not address
-the capital formation problem for equipment acquisition.
-
-Pop et al.\ \cite{pop2018peer} evaluate Ethereum-based peer-to-peer energy
-trading in microgrid environments and identify settlement finality and gas
-cost as primary constraints for high-frequency micro-transactions. This
-observation motivates the use of a Layer-2 execution environment in
-Veridian, as discussed in Section~\ref{sec:architecture}.
-
-\subsection{Decentralized Physical Infrastructure Networks}
-
-Zhang et al.\ \cite{zhang2022depin} define DePIN protocols as systems that
-coordinate the deployment of physical hardware through on-chain token
-incentives, where hardware owners contribute capacity in exchange for
-protocol-issued rewards. The key design challenge identified in this work
-is the oracle problem: verifying that physical capacity was actually
-deployed and utilized without introducing centralized attestation
-intermediaries. Veridian addresses this challenge through hardware-level
-attestation rather than software-level oracle aggregation.
-
-\subsection{Real-World Asset Tokenization}
-
-Massaro et al.\ \cite{massaro2023rwa} review the regulatory architecture
-of real-world asset (RWA) tokenization, finding that the principal
-barriers to adoption are (i) the enforcement of investor eligibility
-constraints at the token transfer layer and (ii) the linkage between
-on-chain token state and off-chain legal title. The ERC-3643 standard
-\cite{erc3643} directly addresses the first barrier through its
-compliance module and identity registry architecture. The Special Purpose
-Vehicle (SPV) structure addresses the second.
-
-\subsection{IoT Data Integrity and Hardware Attestation}
-
-Boudguiga et al.\ \cite{boudguiga2017iot} demonstrate that blockchain
-anchoring of IoT device firmware updates provides a tamper-evident audit
-trail that is computationally infeasible to forge without access to the
-device's private signing key. The Trusted Computing Group's TPM~2.0
-specification \cite{tpm20spec} extends this principle to a standardized
-hardware security module that can be embedded in field devices to produce
-cryptographically signed operational attestations. In Veridian, this
-mechanism is applied to solar generation meters to produce signed
-kWh telemetry that is verifiable without trusting the metering hardware
-vendor.
-
-% =============================================================================
-\section{Protocol Architecture}
+\section{The Cryptoeconomic Lifecycle Architecture}
 \label{sec:architecture}
 % =============================================================================
 
-The Veridian protocol is organized into three layers: the hardware
-attestation layer, the off-chain oracle and data layer, and the on-chain
-execution layer. Fig.~\ref{fig:architecture} illustrates the
-interaction sequence across these layers.
+The deployment, operation, and financing of any decentralized physical infrastructure asset follows a consistent lifecycle. By isolating this lifecycle into five discrete stages, we can explicitly define the mechanism securing each stage. Fig.~\ref{fig:architecture} illustrates this lifecycle and maps the corresponding trust boundaries.
 
 \begin{figure}[t]
 \centering
 \fbox{\parbox{0.9\columnwidth}{\centering\small
-\textbf{[Hardware Layer]}\\
-TPM~2.0 Solar Meter\\
-SECP256R1 ECDSA Signing\\
-$\downarrow$ Signed Telemetry JSON (kWh, Timestamp)\\[4pt]
-\textbf{[Oracle Layer]}\\
-FastAPI Backend + PostgreSQL\\
-ECDSA Verification, Yield Engine ($G = q \times p$)\\
-$\downarrow$ Oracle-Ready Payload (USDC wei)\\[4pt]
-\textbf{[On-Chain Layer: Optimism Sepolia]}\\
-Chainlink Forwarder\\
-YieldDistributor.sol (75/8/7/5/5 waterfall)\\
-RWAToken.sol (ERC-3643) + MultiSigEscrow.sol
+\textbf{1. Capital Formation}\\
+Mechanism: Threshold Escrow $\rightarrow$ \textit{Cryptography / Law}\\[4pt]
+\textbf{2. Compliance-Gated Ownership}\\
+Mechanism: Identity Registry (ERC-3643) $\rightarrow$ \textit{Law / Trust}\\[4pt]
+\textbf{3. Attested Telemetry}\\
+Mechanism: TPM 2.0 Hardware Root $\rightarrow$ \textit{Cryptography bounded by Physics}\\[4pt]
+\textbf{4. Deterministic Settlement}\\
+Mechanism: Smart Contract Waterfall $\rightarrow$ \textit{Cryptography}\\[4pt]
+\textbf{5. Governance Constraints}\\
+Mechanism: Oracle-referenced Price Caps $\rightarrow$ \textit{Economics / Trust}
 }}
-\caption{Veridian three-layer architecture. Physical generation data
-flows from the signed hardware telemetry through the yield engine to
-the on-chain distribution contract.}
+\caption{The five stages of the Cryptoeconomic Lifecycle Architecture and their corresponding trust boundary mappings.}
 \label{fig:architecture}
 \end{figure}
 
-\subsection{Hardware Attestation Layer}
+\subsection{Stage 1: Capital Formation}
+Before physical infrastructure can be deployed, retail or institutional capital must be aggregated securely. In a decentralized environment, this requires a threshold escrow mechanism (e.g., an $M$-of-$N$ multisignature smart contract) to prevent unilateral capital flight by the platform operator. Trust at this stage is hybrid: \emph{cryptography} secures the funds on-chain, while \emph{law} governs the off-chain transfer of the physical title to the Special Purpose Vehicle (SPV) once the threshold is met.
 
-Each solar installation is provisioned with a dedicated metering unit
-containing a TPM~2.0 security module or a software-simulated equivalent
-operating on the SECP256R1 elliptic curve. During installation, the
-administrator registers the meter's public key on the off-chain backend
-through a cryptographic handshake that establishes the Hardware Root of
-Trust (HRoT).
+\subsection{Stage 2: Compliance-Gated Ownership}
+Regulated real-world assets (RWAs) cannot be represented by permissionless bearer instruments (like ERC-20 tokens). The ownership layer must strictly enforce Know Your Customer (KYC) and Anti-Money Laundering (AML) restrictions at the time of transfer. Trust here is anchored in \emph{law and plain trust} (relying on a regulated off-chain KYC provider), which is then strictly enforced on-chain via identity registry smart contracts.
 
-At regular intervals, the meter produces a telemetry payload containing
-the cumulative energy generated in kWh, a Unix timestamp, and the meter
-identifier. This payload is signed using the TPM's internal ECDSA private
-key, which is hardware-protected and cannot be extracted. The signed
-JSON object is transmitted to the FastAPI backend:
+\subsection{Stage 3: Attested Telemetry}
+The defining challenge of DePIN is verifying that physical work was actually performed. The architecture dictates that telemetry must be cryptographically signed at the hardware level (e.g., via a Trusted Platform Module, TPM 2.0) before transmission. Trust is shifted from the network operator to \emph{cryptography bounded by physical hardware}—tampering with the data requires physical extraction of the secured private key \cite{boudguiga2017iot,tpm20spec}.
 
-\begin{equation}
-\sigma = \text{ECDSA}_{\text{SECP256R1}}(k_{\text{priv}},\;
-  H(\text{kWh} \| \text{ts} \| \text{id}))
-  \label{eq:ecdsa}
-\end{equation}
+\subsection{Stage 4: Deterministic Settlement}
+Once telemetry is verified, the resulting revenue must be distributed to stakeholders (investors, operators, platform) without custodial intermediation. A predefined execution layer contract ingests the telemetry and deterministically allocates yields via a fee waterfall. This stage is secured entirely by \emph{cryptography} (the immutable rules of the EVM or equivalent execution environment).
 
-where $k_{\text{priv}}$ is the TPM-resident private key, $H(\cdot)$ is
-a SHA-256 hash function, and $\text{ts}$ is the Unix timestamp.
-
-The backend verifies $\sigma$ against the registered public key $k_{\text{pub}}$.
-Any tampered or replayed payload fails verification and is rejected before
-database insertion. This mechanism ensures that the yield calculation
-is grounded in cryptographically verifiable physical generation records
-rather than operator-supplied data.
-
-A production guard on the variance between hardware-signed utilization
-records and physical maintenance audit findings is set at a maximum of
-5\%. If discrepancy exceeds this threshold, the operator's staked deposit
-is subject to slashing via the escrow contract.
-
-\subsection{Off-Chain Oracle and Yield Engine}
-
-The oracle layer consists of a FastAPI application backed by a PostgreSQL
-database. The database schema maintains four primary relations:
-\texttt{assets} (token address, SPV status, jurisdiction), \texttt{billing\_cycles}
-(computation periods), \texttt{telemetry\_logs} (verified generation history),
-and \texttt{yield\_calculations} (gross and net yield breakdowns).
-
-The yield engine computes gross revenue per billing cycle as:
-
-\begin{equation}
-G = q \times p
-\label{eq:yield}
-\end{equation}
-
-where $q$ is the total energy consumed (kWh) by the lessee household
-over the billing cycle, and $p$ is the contracted EaaS per-unit rate
-(ZAR/kWh). The per-unit rate is constrained on-chain by the price cap
-mechanism described in Section~\ref{sec:pricecap}. The engine then
-applies the 75/8/7/5/5 waterfall to produce per-tranche allocations
-and formats the net investor yield as an ABI-encoded payload denominated
-in USDC-wei (18 decimal precision) for consumption by the
-\texttt{YieldDistributor} contract.
-
-The oracle endpoint \texttt{/yields/oracle/\{asset\_id\}} is authenticated
-via a rotation-based API key linked to the Chainlink Functions
-subscription. This endpoint returns a deterministic payload that the
-Chainlink Forwarder submits to the on-chain \texttt{onReport()} function.
-
-\subsection{On-Chain Execution Layer (Optimism Sepolia)}
-
-Optimism Sepolia was selected as the execution environment for three
-reasons. First, the Optimistic Rollup architecture inherits the
-security properties of Ethereum Layer~1 through fraud proofs, while
-reducing transaction fees by approximately two orders of magnitude.
-Second, the near-zero cost of micro-transactions on Optimism makes
-monthly yield distributions to large numbers of fractional token holders
-economically viable; the same distribution executed on Ethereum mainnet
-would consume yields for low-value holdings. Third, Optimism's EVM
-equivalence ensures full compatibility with the existing ERC-3643
-contract suite and the Foundry toolchain used to deploy and test the
-contracts \cite{optimism2023}.
-
-The on-chain contract suite consists of four primary components:
-
-\begin{enumerate}
-  \item \textbf{RWAToken.sol}: An ERC-3643 compliant token contract
-    that gates all transfers through a \texttt{canTransfer} pre-check
-    against the \texttt{IdentityRegistry}.
-  \item \textbf{IdentityRegistry.sol}: An on-chain whitelist that maps
-    investor wallet addresses to verified ONCHAINID claims \cite{onchainid}.
-  \item \textbf{MultiSigEscrow.sol}: A 3-of-5 threshold multisignature
-    contract that holds investor capital during the offering period.
-  \item \textbf{YieldDistributor.sol}: A Chainlink-triggered contract
-    that enforces the revenue waterfall and executes USDC distributions.
-\end{enumerate}
+\subsection{Stage 5: Governance Constraints}
+Physical infrastructure directly impacts human end-users. Unconstrained decentralized autonomous organizations (DAOs) optimizing purely for yield could impose extractive pricing on consumers. Therefore, the architecture requires automated on-chain circuit breakers that limit governance actions based on external oracles. This stage relies on \emph{economics} (incentive alignment) and \emph{plain trust} in the oracle data provider.
 
 % =============================================================================
-\section{Economic Model and Revenue Waterfall}
+\section{Instantiation: Veridian Solar EaaS}
+\label{sec:instantiation}
+% =============================================================================
+
+To validate the architecture, we implemented \emph{Veridian}, a prototype targeting the deployment of solar photovoltaics (PV) in South Africa. The country faces severe electricity access challenges, with a history of rolling load-shedding and 14.7~million citizens lacking reliable access \cite{nersa2023,worldbank2023}. While the solar resource is abundant (averaging 5.5 sun-hours per day) \cite{saws2023solar}, the upfront capital cost of a 450~W system (R6,750) is prohibitive for median-income households. The Veridian protocol addresses this through an Equipment-as-a-Service (EaaS) model, mapping directly to the five lifecycle stages.
+
+\subsection{Capital Formation: 3-of-5 Multisignature Escrow}
+In Veridian, investor USDC is aggregated in an on-chain \texttt{MultiSigEscrow} contract on Optimism Sepolia. Capital release requires 3-of-5 signatures from the Platform Operator, Field Operator, SPV Representative, Legal Representative, and Independent Verifier. Capital is only released once the Legal Representative confirms off-chain title transfer, directly linking the cryptographic state to legal ownership.
+
+\subsection{Compliance: ERC-3643 Tokenization}
+To satisfy South African Financial Sector Conduct Authority (FSCA) constraints, ownership is tokenized using the ERC-3643 standard \cite{erc3643}. The \texttt{RWAToken} contract intercepts all transfers via a \texttt{canTransfer} hook, querying an \texttt{IdentityRegistry} to ensure the recipient wallet possesses a valid KYC claim issued by a regulated entity.
+
+\subsection{Telemetry: Hardware Root of Trust}
+Each solar installation is provisioned with a simulated TPM~2.0 metering unit operating on the SECP256R1 curve. The meter produces a JSON payload containing cumulative energy (kWh) and a timestamp, signed via the TPM's private key. The off-chain yield engine verifies this signature before computing revenue. 
+
+\subsection{Settlement: The 75/8/7/5/5 Waterfall}
+\label{sec:waterfall}
+Revenue ($G$) is computed as energy consumed ($q$) multiplied by the EaaS rate ($p$). The \texttt{YieldDistributor} contract deterministically splits this revenue into five tranches upon receiving an authorized oracle report:
+\begin{itemize}
+    \item \textbf{75\%: Token Holders} (Investor yield, with a 15\% penalty applied to unstaked tokens to encourage long-term capital commitment).
+    \item \textbf{8\%: Operations and Maintenance} (Field operator).
+    \item \textbf{7\%: Insurance Reserve} (Held by SPV for asset replacement).
+    \item \textbf{5\%: Pool Expansion} (For acquiring new arrays).
+    \item \textbf{5\%: Platform Operations} (Veridian protocol).
+\end{itemize}
+
+\subsection{Governance: Oracle-Referenced Price Cap}
+To prevent the token-holder DAO from imposing monopolistic EaaS rates on households, a \texttt{PricingController} contract tracks the Eskom residential tariff ($P_{\text{grid}}$) \cite{eskom2024tariff} via an off-chain oracle. It strictly enforces $P_{\text{proposed}} \leq 0.90 \times P_{\text{grid}}$. Any DAO vote exceeding this 10\% discount ceiling is automatically reverted, structurally protecting consumers.
+
+% =============================================================================
+\section{Economic Model and Simulation}
 \label{sec:economic}
 % =============================================================================
 
-\subsection{Solar Asset Parameterization}
-\label{sec:solarparam}
+\subsection{Asset Parameterization and Simulation}
+The base unit of analysis is a 450~W monocrystalline panel costing R6,750 (2024). Table~\ref{tab:params} summarizes the parameters.
 
-The base unit of analysis is a single 450~W monocrystalline silicon
-photovoltaic panel. The capital cost of the complete hardware unit
-(panel, mounting, wiring, and meter) is R6,750 as of 2024 market rates
-in the South African context \cite{nersa2023}. Table~\ref{tab:params}
-summarizes the key input parameters for the economic model.
-
-\begin{table}[t]
-\caption{Solar Asset Economic Parameters (450~W Panel, South Africa)}
+\begin{table}[h]
+\caption{Solar Asset Economic Parameters (450~W Panel)}
 \label{tab:params}
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
@@ -387,667 +172,103 @@ summarizes the key input parameters for the economic model.
 Panel capacity    & 450            & W \\
 Capital cost      & R6,750         & ZAR (2024) \\
 Avg.\ sun-hours   & 5.5            & h~day$^{-1}$ (annual avg.) \\
-Daily generation  & 2.475          & kWh~day$^{-1}$ \\
 Annual generation & 903.4          & kWh~year$^{-1}$ \\
 EaaS rate         & $\leq$R2.23    & ZAR/kWh (10\% below Eskom) \\
 Gross annual rev. & R2,014         & ZAR (at R2.23/kWh) \\
-Net yield (EaaS)  & 20.7\%         & of capital cost per annum \\
+Net yield (EaaS)  & 18.7\%         & adjusted per annum \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{table}
 
-The base-case net yield of 20.7\% per annum is computed after applying the
-75/8/7/5/5 waterfall. The investor tranche of 75\% of R2,014 yields
-R1,511 per annum against a capital cost of R6,750, producing a
-return on investment of 22.4\% before tax. The protocol's 5\% platform
-fee and 5\% expansion fund are retained on-chain, while the 8\%
-operations and maintenance (O\&M) fee and 7\% insurance reserve are
-disbursed to the field operator (SunFix Logistics) and the reserve
-multisig wallet, respectively.
+An end-to-end simulation of the smart contracts on Optimism Sepolia validated the flow. The system ingested simulated TPM telemetry, passed the data through the yield engine, and triggered the \texttt{YieldDistributor} contract. A gross yield test of R34,223.75 successfully triggered the 75/8/7/5/5 waterfall, allocating exactly R31,656.97 (the 75\% investor tranche + reserves) in USDC-wei precision. 
+
+While the protocol manages the ZAR-denominated tariff off-chain and distributes USDC on-chain, the \textbf{investor} inherently carries the Foreign Exchange (FX) risk. Depreciation of the ZAR against the USD reduces the effective yield.
 
 \subsection{Sensitivity Analysis}
-\label{sec:sensitivity}
+Real-world conditions introduce variance. Table~\ref{tab:sensitivity} models the impact of irradiance, panel degradation (0.5\%--0.7\%) \cite{vartiainen2020lcoe}, inverter loss (3\%--5\%), and most critically, \emph{collection risk} (the probability of a household failing to pay).
 
-The 20.7\% base-case yield assumes constant irradiance of 5.5 sun-hours
-per day, zero panel degradation, and no inverter losses. Real-world
-conditions introduce variance from each of these assumptions. Standard
-monocrystalline silicon panels degrade at 0.5\% to 0.7\% per annum
-\cite{vartiainen2020lcoe}; inverter efficiency losses are typically
-3\% to 5\%. Table~\ref{tab:sensitivity} presents the investor yield
-under five scenarios spanning conservative to optimistic assumptions.
-
-\begin{table}[t]
+\begin{table}[h]
 \caption{Sensitivity Analysis: Investor Yield Under Varying Assumptions}
 \label{tab:sensitivity}
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{p{2.5cm}rrrr}
+\begin{tabular}{p{2.2cm}rrrrr}
 \toprule
-\textbf{Scenario} & \textbf{Sun-h} & \textbf{Deg.} & \textbf{Inv.} & \textbf{Yield} \\
+\textbf{Scenario} & \textbf{Sun-h} & \textbf{Deg.} & \textbf{Inv.} & \textbf{Coll.} & \textbf{Yield} \\
 \midrule
-Conservative     & 4.0 & 0.7\% & 5\% & 13.8\% \\
-Low irradiance   & 4.5 & 0.5\% & 4\% & 16.2\% \\
-Base case        & 5.5 & 0\%   & 0\% & 20.7\% \\
-Realistic adj.   & 5.5 & 0.5\% & 4\% & 18.7\% \\
-High irradiance  & 6.5 & 0.3\% & 3\% & 23.1\% \\
-\bottomrule
-\multicolumn{5}{l}{\small Sun-h = daily sun-hours; Deg.~= annual panel}\\
-\multicolumn{5}{l}{\small degradation (Year~1); Inv.~= inverter loss.}
-\end{tabular}
-\end{center}
-\end{table}
-
-Under the most conservative scenario (4.0 sun-hours, 0.7\% degradation,
-5\% inverter loss), the investor yield drops to 13.8\%, which remains
-positive but may fall below the risk premium required by retail investors
-in an emerging market context. The ``realistic adjusted'' scenario
-(5.5~sun-hours with standard degradation and inverter loss applied)
-produces an 18.7\% yield, which we consider the most probable
-first-year return. The base-case 20.7\% figure should therefore be
-understood as an upper bound on Year~1 performance assuming ideal
-conditions.
-
-\subsection{Seasonal Generation Curves}
-
-South Africa's solar irradiance follows a pronounced seasonal pattern
-driven by its position in the Southern Hemisphere. Peak generation
-occurs during the austral summer months of November through February,
-when daily GHI averages 6.5~kWh~m$^{-2}$~day$^{-1}$ in high-irradiance
-provinces such as the Northern Cape. The austral winter months of June
-and July represent the generation trough, with daily GHI dropping to
-approximately 4.5~kWh~m$^{-2}$~day$^{-1}$ \cite{saws2023solar,irena2022south_africa}.
-
-Table~\ref{tab:seasonal} presents the estimated monthly generation and
-corresponding gross revenue for a 450~W panel across a representative
-annual cycle. The seasonal variation is a critical input for the
-yield engine: the billing cycle computation window is aligned to
-calendar months, and the \texttt{YieldDistributor} distributes the
-actual (not averaged) yield each month. Investors therefore receive
-higher distributions in summer months and lower distributions in
-winter months, consistent with the physical generation profile.
-
-\begin{table}[t]
-\caption{Estimated Monthly Generation and Gross Revenue (450~W Panel)}
-\label{tab:seasonal}
-\begin{center}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{lrr}
-\toprule
-\textbf{Month} & \textbf{Generation (kWh)} & \textbf{Gross Rev.\ (R)} \\
-\midrule
-January   & 101.5 & 226.4 \\
-February  & 91.7  & 204.5 \\
-March     & 83.8  & 186.9 \\
-April     & 68.9  & 153.6 \\
-May       & 57.1  & 127.3 \\
-June      & 49.5  & 110.4 \\
-July      & 52.3  & 116.6 \\
-August    & 64.3  & 143.4 \\
-September & 75.6  & 168.6 \\
-October   & 88.4  & 197.1 \\
-November  & 98.7  & 220.1 \\
-December  & 72.6  & 161.9 \\
-\midrule
-\textbf{Annual} & \textbf{903.4} & \textbf{R2,014} \\
+Conservative     & 4.0 & 0.7\% & 5\% & 80\% & 11.0\% \\
+Realistic (c=80\%) & 5.5 & 0.5\% & 4\% & 80\% & 14.9\% \\
+Realistic (c=90\%) & 5.5 & 0.5\% & 4\% & 90\% & 16.8\% \\
+Realistic (c=100\%)& 5.5 & 0.5\% & 4\% & 100\% & 18.7\% \\
+High irradiance  & 6.5 & 0.3\% & 3\% & 100\% & 23.1\% \\
 \bottomrule
 \end{tabular}
 \end{center}
 \end{table}
 
-\subsection{The 75/8/7/5/5 Revenue Waterfall}
-\label{sec:waterfall}
+The baseline adjusted yield is 18.7\%. However, if collection rates drop to 80\% (common in emerging market EaaS models), the yield drops to 14.9\%. 
 
-Gross revenue $G$ computed per (\ref{eq:yield}) is partitioned by the
-\texttt{YieldDistributor} contract into five tranches according to fixed
-percentage allocations defined in the contract's immutable state. The
-waterfall is executed deterministically upon receipt of an authorized
-oracle report. Table~\ref{tab:waterfall} defines each tranche and its
-economic rationale.
-
-\begin{table}[t]
-\caption{Revenue Waterfall Allocation (75/8/7/5/5)}
-\label{tab:waterfall}
-\begin{center}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{clr}
-\toprule
-\textbf{Tranche} & \textbf{Recipient / Purpose} & \textbf{Share} \\
-\midrule
-1 & Token holders (investor yield)   & 75\% \\
-2 & Operations and maintenance (O\&M)& 8\%  \\
-3 & Insurance reserve fund           & 7\%  \\
-4 & Pool expansion (new arrays)      & 5\%  \\
-5 & Platform operations              & 5\%  \\
-\bottomrule
-\multicolumn{3}{l}{\small Note: all tranches denominated in USDC on Optimism Sepolia.}
-\end{tabular}
-\end{center}
-\end{table}
-
-The 75\% investor tranche is further modulated by a time-lock staking
-mechanism. Token holders who lock their ERC-3643 tokens in the
-\texttt{RWAVault} contract receive the full 75\% allocation; liquid
-(unstaked) holders receive 60\%, with the 15\% differential returned to
-the depreciation reserve. This design encourages long-term capital
-commitment and reduces secondary market volatility.
-
-The 7\% insurance reserve is critical to the asset-backed nature of the
-protocol. In the event of panel failure, fire, or theft, insurance
-proceeds are routed through the SPV, converted to USDC, and returned to
-token holders via the \texttt{YieldDistributor}'s liquidation path.
-The 5\% expansion fund accumulates on-chain until a governance vote
-approves the acquisition of a new solar array, at which point it is
-routed to the \texttt{MultiSigEscrow} for a new capital formation cycle.
-
-\subsection{The 3-of-5 Multisignature Escrow Mechanics}
-\label{sec:multisig}
-
-During the initial offering period, investor USDC capital is held in the
-\texttt{MultiSigEscrow} contract. Capital release to the equipment
-seller requires the cryptographic confirmation of at least 3 out of 5
-designated signers. The five signer roles are:
-
-\begin{enumerate}
-  \item \textbf{Platform Operator}: Veridian protocol administrator.
-  \item \textbf{Solar Operator}: SunFix Logistics field representative.
-  \item \textbf{SPV Representative}: Director of the asset-holding SPV entity.
-  \item \textbf{Legal Representative}: Licensed conveyancer or
-    commercial attorney confirming title transfer.
-  \item \textbf{Independent Verifier}: An auditor or regulatory
-    observer confirming physical installation.
-\end{enumerate}
-
-The 3-of-5 threshold is chosen to balance operational efficiency (a single
-party failure does not block the protocol) against security (any two
-parties acting collusively cannot release capital unilaterally). The
-contract is deployed with all five signer addresses registered at
-instantiation time; signer rotation requires a full 5-of-5 vote, making
-signer substitution an extraordinary governance action.
-
-Capital is released from escrow in a single transaction only after the
-SPV Representative and Legal Representative have both signed, confirming
-off-chain legal title transfer. This two-role requirement ensures that
-the on-chain capital release is causally linked to the off-chain legal
-event, providing token holders with enforceable asset-backed collateral.
-
-\subsection{Oracle-Referenced Household Price Cap}
-\label{sec:pricecap}
-
-To prevent investor governance from imposing extractive EaaS rates on
-lessee households, the protocol enforces a strict price cap constraint
-directly in the smart contract execution layer. The \texttt{PricingController}
-contract queries a Chainlink Price Feed that tracks the current
-regulated Eskom residential tariff ($P_{\text{grid}}$) and enforces:
-
-\begin{equation}
-P_{\text{proposed}} \leq 0.90 \times P_{\text{grid}}
-\label{eq:pricecap}
-\end{equation}
-
-Any DAO governance proposal that sets the EaaS rate above this ceiling
-is automatically reverted by the contract. This structural constraint
-guarantees that lessee households always pay at least 10\% below the
-Eskom regulated tariff, preserving the economic incentive for households
-to adopt the EaaS model and protecting the protocol from the reputational
-and default risk of predatory pricing.
+\subsection{Gas Cost and Scalability}
+The \texttt{YieldDistributor} utilizes a push-based model on Optimism (L2), which iterates over all token holders. At 0.001 Gwei, distributing to 1,000 holders costs approximately \$0.078. While economically viable, the Optimism block gas limit imposes a hard ceiling of $\approx$1,150 holders per transaction. For larger deployments, the architecture dictates a migration to a Merkle-proof pull distribution pattern.
 
 % =============================================================================
-\section{Implementation}
-\label{sec:implementation}
+\section{Generalizability and Future Capabilities}
+\label{sec:generalizability}
 % =============================================================================
 
-\subsection{Smart Contract Suite}
+While instantiated for solar PV, the Cryptoeconomic Lifecycle Architecture is asset-agnostic. It applies equally to any DePIN asset generating cash flows based on physically verifiable work.
 
-The Veridian smart contract suite is implemented in Solidity~0.8.x and
-deployed using the Foundry toolchain on Optimism Sepolia
-(Chain ID~11155420). The full contract source is available in the
-project repository at \url{https://github.com/sasssyboujee/veridian}.
-The four primary contracts are:
+A primary future capability lies in \textbf{pooling excess battery storage} for high-demand third parties. As distributed solar installations increasingly pair with local battery storage, excess generation can be aggregated into a virtual power plant (VPP). Rather than solely servicing the local household, this pooled storage can be sold directly to data centers, whose spatio-temporal flexibility and massive energy demand make them ideal buyers in regional P2P energy markets \cite{jin2025data}. 
 
-\textbf{RWAToken.sol} inherits from \texttt{ERC-3643} and
-\texttt{ERC20Votes}. Every \texttt{transfer} and \texttt{transferFrom}
-call is intercepted by the \texttt{canTransfer} pre-check, which queries
-the \texttt{IdentityRegistry} via the \texttt{isVerified(address)}
-function. Transfers to non-whitelisted addresses are automatically
-reverted. The contract exposes \texttt{forcedTransfer} and
-\texttt{setAddressFrozen} functions accessible only to the designated
-Agent role, enabling compliance-mandated asset recovery without
-disrupting protocol state.
-
-\textbf{IdentityRegistry.sol} maintains the triple registry structure
-required by ERC-3643: the \texttt{ClaimTopicsRegistry} (defining required
-claim types, e.g., KYC clearance, AML status, jurisdiction), the
-\texttt{TrustedIssuersRegistry} (enumerating authorized KYC providers),
-and the address-to-identity mapping. In the current testnet deployment,
-the \texttt{AutoKYC} contract acts as a mock claim issuer that directly
-injects an approved identity claim upon wallet submission. Production
-deployment requires replacement with a regulated KYC provider integration.
-
-\textbf{MultiSigEscrow.sol} implements the 3-of-5 threshold logic
-described in Section~\ref{sec:multisig}. Investor USDC deposits are
-accumulated in the contract's token balance. A \texttt{confirmRelease}
-function increments a per-signer confirmation bitmap; when the confirmation
-count reaches 3, the \texttt{executeRelease} function becomes callable
-and transfers the full balance to the registered equipment seller address.
-
-\textbf{YieldDistributor.sol} implements the waterfall logic. The
-\texttt{onReport} function, accessible only to the registered Chainlink
-\texttt{KeystoneForwarder} address, receives the ABI-encoded oracle
-payload containing the \texttt{net\_yield\_wei} scalar and a
-\texttt{token\_snapshot} mapping of holder addresses to balances. The
-contract iterates over the snapshot, computing each holder's proportional
-allocation as:
-
-\begin{equation}
-Y_i = \frac{b_i}{B_{\text{total}}} \times 0.75 \times G_{\text{usdc}}
-\label{eq:holderyield}
-\end{equation}
-
-where $b_i$ is the holder's token balance, $B_{\text{total}}$ is the
-total supply, and $G_{\text{usdc}}$ is the gross yield denominated in
-USDC-wei. The remaining 25\% is partitioned into the four protocol
-tranches (8\%, 7\%, 5\%, 5\%) and transferred to their respective
-registered wallet addresses in the same transaction.
-
-\subsection{End-to-End Simulation Results}
-
-An end-to-end simulation was executed against the deployed testnet
-contracts using the \texttt{simulate\_flow.py} script. The simulation
-exercised the complete protocol lifecycle: asset registration, billing
-cycle creation, TPM-signed telemetry ingestion, yield engine calculation,
-and oracle payload compilation.
-
-Table~\ref{tab:simulation} presents the key output values from the
-simulation run. The gross yield of R34,223.75 reflects a multi-cycle
-aggregation across a representative fleet segment. The net yield of
-R31,656.97, representing 92.5\% of gross yield after the 7.5\% protocol
-fee split (Champions 1.0\%, Core 2.0\%, Opportunity 4.5\%), was
-successfully encoded as a \texttt{net\_yield\_wei} value of
-\texttt{31656968750000000000000} (scaled to 18 decimal precision for
-EVM compatibility).
-
-\begin{table}[t]
-\caption{End-to-End Simulation Output (Multi-Cycle Fleet Segment)}
-\label{tab:simulation}
-\begin{center}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{lr}
-\toprule
-\textbf{Metric} & \textbf{Value} \\
-\midrule
-Gross yield         & R34,223.75 \\
-Champions fee (1\%) & R342.24    \\
-Core fee (2\%)      & R684.48    \\
-Opportunity fee (4.5\%) & R1,540.07 \\
-Total protocol fee  & R2,566.78  \\
-Net yield           & R31,656.97 \\
-Oracle payload (wei)& 31,656,968,750,000,000,000,000 \\
-\bottomrule
-\end{tabular}
-\end{center}
-\end{table}
-
-The simulation confirmed end-to-end pipeline integrity: the oracle payload
-was correctly structured for Chainlink Functions ingestion, the ECDSA
-telemetry signatures were verified against the registered public key, and
-the yield calculation matched the expected waterfall arithmetic to 18-decimal
-precision.
-
-\subsection{Token Issuance and ERC-3643 Compliance Flow}
-
-The issuance of fractional solar tokens follows a six-step compliance
-sequence. First, the investor submits their wallet address to the KYC
-portal. Second, the \texttt{AutoKYC} claim issuer (or, in production, a
-regulated provider) verifies the investor's identity and issues a signed
-claim bound to their ONCHAINID. Third, the \texttt{IdentityRegistry}
-whitelists the investor's address. Fourth, the investor deposits USDC
-into the \texttt{MultiSigEscrow}. Fifth, upon 3-of-5 confirmation and
-legal title transfer, the escrow releases capital and the
-\texttt{RWAFactory} deploys a new \texttt{RWAToken} instance and mints
-fractional tokens proportional to each investor's contribution. Sixth,
-the \texttt{RWAFactory} also deploys a dedicated \texttt{RWAGovernor}
-DAO contract for the asset, granting token holders voting power
-proportional to their fractional ownership.
-
-\subsection{Gas Cost and Throughput Evaluation}
-\label{sec:gascost}
-
-The \texttt{YieldDistributor} contract uses a push-based distribution
-pattern that iterates over all token holders in a single transaction.
-This design has $O(n)$ gas complexity, where $n$ is the number of
-holders. On Optimism, each USDC transfer within the loop consumes
-approximately 26,000~gas (21,000 base + 5,000 for ERC-20 storage
-writes). The total gas cost per distribution cycle is therefore:
-
-\begin{equation}
-C_{\text{push}}(n) = C_{\text{base}} + n \times C_{\text{transfer}}
-\label{eq:gascost}
-\end{equation}
-
-where $C_{\text{base}} \approx 50{,}000$ gas (function dispatch,
-oracle verification, waterfall split) and
-$C_{\text{transfer}} \approx 26{,}000$ gas per holder.
-Table~\ref{tab:gascost} presents the estimated gas consumption
-and USD cost at an Optimism L2 gas price of 0.001~Gwei.
-
-\begin{table}[t]
-\caption{Push Distribution Gas Cost on Optimism (L2)}
-\label{tab:gascost}
-\begin{center}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{rrrr}
-\toprule
-\textbf{Holders} & \textbf{Gas} & \textbf{Est.~Cost} & \textbf{Break-even} \\
-\midrule
-10     & 310,000      & \$0.001  & R0.02/holder  \\
-100    & 2,650,000    & \$0.008  & R0.17/holder  \\
-500    & 13,050,000   & \$0.039  & R0.85/holder  \\
-1,000  & 26,050,000   & \$0.078  & R1.70/holder  \\
-5,000  & 130,050,000  & \$0.390  & R8.50/holder  \\
-\bottomrule
-\multicolumn{4}{l}{\small Break-even = min.~monthly yield per holder for gas}\\
-\multicolumn{4}{l}{\small cost not to exceed 1\% of distribution.}
-\end{tabular}
-\end{center}
-\end{table}
-
-At 1,000 holders, the push distribution remains economically viable
-on Optimism (\$0.078 per cycle). However, two scalability constraints
-emerge. First, the Optimism block gas limit (30M gas) imposes a hard
-ceiling of approximately 1,150 holders per single distribution
-transaction. Second, for holders with very small fractional positions,
-the per-holder gas cost may exceed the yield distributed.
-
-A Merkle-proof pull distribution pattern provides an $O(1)$ alternative.
-In this model, the contract administrator publishes a Merkle root of
-the yield allocation tree, and each holder independently submits a
-proof to claim their yield. The gas cost per claim is approximately
-50,000~gas regardless of the total holder count, with the trade-off
-that unclaimed yields accumulate until the holder initiates a claim
-transaction. The pull pattern is recommended for deployments exceeding
-1,000 holders and is planned for future protocol versions.
+Under our framework, this simply extends the lifecycle: the battery management system utilizes the same Stage 3 TPM hardware to sign export telemetry. The Stage 4 settlement smart contract algorithmically routes data center revenue back to the fractional panel owners. By formalizing the trust boundaries, the architecture supports complex multi-party energy trading without requiring ad-hoc trust assumptions for each new asset class.
 
 % =============================================================================
-\section{Evaluation}
+\section{Security and Trust Model Evaluation}
 \label{sec:evaluation}
 % =============================================================================
 
-\subsection{Security Analysis}
+\subsection{The Two-Tier Trust Model}
+To accurately assess the Veridian prototype, we apply a \emph{two-tier trust model} distinguishing between design-level guarantees and evaluation-level implementation. 
 
-The protocol defines five quantitative circuit-breaker thresholds.
-Breach of any threshold triggers automated protective action:
+\textbf{Tier 1: Hardware Attestation.} At the design level, tampering requires physical extraction of a non-exportable TPM private key. However, at the evaluation level, the current prototype uses software-simulated keys. The security guarantee is therefore currently unverifiable until physical hardware is deployed.
 
-\begin{enumerate}
-  \item \textbf{Telemetry Variance} ($\leq$5\%): Discrepancy between
-    hardware-signed generation data and physical audit findings triggers
-    operator stake slashing.
-  \item \textbf{Secondary Market Liquidity Ratio} ($\geq$15\% of market
-    cap within 30 days): Failure indicates inadequate secondary market
-    depth; automated circuit breaker halts new token issuance.
-  \item \textbf{Governance Quorum Floor} ($\geq$10\% of circulating supply):
-    Failure on critical votes triggers automatic fallback to the
-    Maintenance Council, preventing operational paralysis.
-  \item \textbf{Price Cap Compliance}: Any proposed rate exceeding
-    $0.90 \times P_{\text{grid}}$ (equation \ref{eq:pricecap}) is
-    automatically reverted by the \texttt{PricingController}.
-  \item \textbf{Yield-to-CapEx Accumulation}: The expansion fund requiring
-    more than 24 months to accumulate a 20\% down payment on a
-    new mid-tier array signals stalled network growth and triggers
-    a governance review.
-\end{enumerate}
+\textbf{Tier 2: Oracle Delivery.} At the design level, yield distribution is triggered by a decentralized consensus network (e.g., Chainlink). At the evaluation level, it is currently triggered by a centralized FastAPI backend. 
 
-The hardware attestation layer provides a strong security guarantee
-for the telemetry data. Because the TPM's private key is hardware-resident
-and cannot be exported, an adversary seeking to inflate reported generation
-must either compromise the physical meter hardware or conduct a
-man-in-the-middle attack between the meter and the backend API. The
-ECDSA verification in the backend (equation \ref{eq:ecdsa}) and the
-5\% variance threshold provide complementary defenses against these
-attack vectors.
+\subsection{Comparison with Existing Protocols}
+Table~\ref{tab:comparison} demonstrates how an explicit trust mapping differentiates this architecture from existing models.
 
-\subsection{Comparison with Existing DePIN Energy Protocols}
-
-Table~\ref{tab:comparison} compares Veridian with two representative
-existing protocols in the energy DePIN and RWA tokenization space.
-
-\begin{table}[t]
-\caption{Comparison with Related Energy Blockchain Protocols}
+\begin{table}[h]
+\caption{Comparison with Related Energy and RWA Protocols}
 \label{tab:comparison}
 \renewcommand{\arraystretch}{1.2}
-\begin{tabular}{p{1.5cm}p{1.6cm}p{1.6cm}p{1.6cm}}
+\begin{tabular}{p{1.6cm}p{1.7cm}p{1.6cm}p{2.1cm}}
 \toprule
-\textbf{Feature} & \textbf{Veridian} & \textbf{Power Ledger} & \textbf{Ondo Finance} \\
+\textbf{Feature} & \textbf{Veridian} & \textbf{Power Ledger} & \textbf{Sun Exchange} \\
 \midrule
-Hardware attest. & TPM 2.0 ECDSA & None & None \\
-Investor KYC & ERC-3643 on-chain & Off-chain & Centralized \\
-Settlement & USDC (L2) & POWR token & USDC (mainnet) \\
-Asset type & Solar PV (EaaS) & Grid energy & Public securities \\
-Household disc. & $\geq$10\% vs.~grid & Market rate & N/A \\
-Multisig escrow & 3-of-5 & None & Custodial \\
-Yield profile & Seasonal & Real-time & Fixed \\
+Attestation & TPM 2.0 (Sim) & Grid Meter & Off-chain Trust \\
+Ownership & ERC-3643 & Utility Token & Centralized DB \\
+Settlement & USDC (L2) & POWR & BTC / ZAR \\
+Protection & On-chain Cap & Market Rate & None \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Veridian is distinguished from Power Ledger by the hardware attestation
-layer and the ERC-3643 compliance mechanism. Power Ledger requires
-functioning grid interconnection and does not provide regulated fractional
-investment instruments. Veridian is distinguished from Ondo Finance by
-the physical asset class (solar PV infrastructure versus public
-securities), the hardware attestation-grounded telemetry pipeline, and
-the explicit household protection constraint in equation (\ref{eq:pricecap}).
-
-\subsection{Token Standard Suitability}
-
-Table~\ref{tab:tokenstandards} compares the three principal Ethereum
-token standards considered for the fractional solar tokens.
-
-\begin{table}[t]
-\caption{Token Standard Comparison for Regulated Solar Asset Tokens}
-\label{tab:tokenstandards}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{p{1.2cm}p{2.8cm}p{2.8cm}}
-\toprule
-\textbf{Standard} & \textbf{Compliance} & \textbf{Suitability} \\
-\midrule
-ERC-20  & None (permissionless) & Unsuitable: cannot enforce KYC/AML at transfer layer \\
-ERC-1400 & Static role-based & Partial: high gas cost, complex partition management \\
-ERC-3643 & Dynamic registry pre-check on every transfer & Optimal: enforces KYC/AML, supports forced transfer, aligns with securities regulation \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-ERC-3643 \cite{erc3643} was selected because it enforces compliance at
-the smart contract execution layer, making it impossible for a
-non-whitelisted wallet to receive solar asset tokens regardless of the
-calling mechanism. This property is essential for South African FSCA
-compliance requirements for retail investment products.
-
-\subsection{Trust Model and Limitations}
-\label{sec:trustmodel}
-
-The Veridian prototype operates under a \emph{two-tier trust model}
-that distinguishes between design-level security guarantees and the
-current evaluation-level trust assumptions. This distinction is critical
-for an accurate assessment of the protocol's maturity.
-
-\textbf{Tier~1: Hardware Attestation (Design-level guarantee; currently
-simulated).} The protocol design specifies that telemetry integrity is
-anchored to a TPM~2.0 hardware root of trust whose private key is
-non-exportable. Under physical deployment, an adversary seeking to forge
-generation data must compromise the physical meter hardware itself,
-reducing the threat surface to physical tampering rather than software
-exploitation. However, in the current prototype, the TPM is simulated
-using software-generated SECP256R1 keys. The signing key is therefore
-extractable, and the hardware attestation guarantee is \emph{unverifiable}
-at the evaluation level. The development bypass in
-\texttt{tpm\_verify.py} further weakens this tier by permitting
-unverified payloads. The threat surface reduction that physical TPM
-deployment would achieve is bounded by the TPM~2.0 specification's
-key non-exportability guarantee \cite{tpm20spec}; the current simulation
-validates the protocol flow and payload format, but not the
-tamper-resistance property.
-
-\textbf{Tier~2: Oracle Delivery (Decentralized consensus guarantee;
-currently centralized).} The protocol design specifies yield distribution
-triggered by a Chainlink Functions decentralized oracle network, where
-multiple independent nodes reach consensus on the yield payload before
-submission to the \texttt{YieldDistributor}. In the current prototype,
-this delivery is simulated by a single FastAPI backend making a direct
-contract call. This means the current system is architecturally
-equivalent to a centralized platform distributing funds via an API
-call. The ``deterministic settlement'' claim therefore applies to the
-\emph{contract-level execution logic} (which enforces the waterfall
-regardless of the caller) but not to the \emph{trigger mechanism},
-which currently lacks decentralized consensus.
-
-Both tiers must be independently evaluated when assessing the
-protocol's security posture. The current prototype operates at the
-weakest level of both tiers: simulated hardware attestation and
-centralized oracle delivery.
-
-In addition to the trust model limitations, two further components
-require production-grade replacement:
-
-\begin{enumerate}
-  \item \textbf{AutoKYC (Mocked)}: The \texttt{AutoKYC} claim issuer
-    bypasses identity verification. Production deployment requires
-    integration with a regulated KYC provider (e.g., Onfido, Jumio)
-    connected to the FSCA's AML/CFT reporting framework.
-  \item \textbf{Midnight Network zk-KYC (Proposed)}: The integration of
-    Midnight Network zero-knowledge proofs for selective identity
-    disclosure is architecturally specified but not implemented. This
-    component would enable investors to prove KYC clearance without
-    exposing personal data to the public ledger.
-\end{enumerate}
-
-% =============================================================================
-\section{Discussion}
-\label{sec:discussion}
-% =============================================================================
-
-\subsection{Structural Disintermediation of Grid Monopoly}
-
-The Veridian protocol achieves grid-monopoly disintermediation through
-a combination of physical infrastructure bypass and financial
-democratization, rather than through regulatory confrontation. By
-providing households with solar energy via the EaaS model at a rate
-contractually bounded below the Eskom regulated tariff (equation
-\ref{eq:pricecap}), the protocol reduces the household's dependence on
-grid supply without requiring grid disconnection. As panel fleets scale,
-the aggregate distributed generation capacity represents a meaningful
-reduction in peak demand that Eskom would otherwise need to supply
-through thermal generation.
-
-From the investor perspective, the protocol provides access to an asset
-class (physical solar infrastructure) that has historically been
-accessible only to utilities, pension funds, and infrastructure
-private equity. Fractional tokenization at the single-panel level (R6,750
-capital cost per unit) reduces the minimum investment to a retail
-scale. The ERC-3643 compliance layer ensures that this democratization
-does not come at the cost of regulatory compliance or investor
-protection.
-
-\subsection{Scalability Pathway}
-
-The current simulation operates at a single-panel granularity.
-Fleet-scale deployment would aggregate multiple panels into a single SPV
-and issue tokens representing a proportional share of the fleet's
-combined generation. The yield engine's \texttt{billing\_cycles} schema
-supports multi-asset aggregation natively; the primary technical barrier
-to scale is the cost of on-chain token snapshot iteration in the
-\texttt{YieldDistributor}. At large holder counts, the gas cost of the
-push-distribution loop could become prohibitive even on Optimism.
-This motivates a future migration to a Merkle-proof-based pull
-distribution model, where holders claim their yields by submitting a
-proof rather than receiving an automatic airdrop.
-
-\subsection{Regulatory Pathway for South Africa}
-
-The SPV and token structure described in this paper constitute a
-\emph{design-level legal assumption} that has not been validated by
-a formal legal opinion. The following analysis identifies the relevant
-South African legislation and the specific licensing requirements that
-would apply.
-
-Under the Financial Markets Act 19 of 2012, instruments that offer
-profit participation derived from a third party's operational efforts
-are classified as securities. The Veridian EaaS tokens, which provide
-yield derived from SunFix Logistics' operation of the solar panels,
-would likely satisfy this classification. Additionally, the Collective
-Investment Schemes Control Act 45 of 2002 (CIS Act) may apply if the
-FSCA determines that pooled investor capital managed by an SPV
-constitutes a collective investment scheme, which would require a
-Section~5 license from the FSCA.
-
-The SPV itself would be incorporated under the Companies Act 71 of
-2008 as a private company (Pty.~Ltd.) with the singular purpose of
-holding legal title to the solar panel fleet. The ERC-3643 standard's
-mandatory KYC/AML enforcement and the \texttt{IdentityRegistry}
-provide the on-chain compliance infrastructure that the FSCA would
-require for a retail investment product.
-
-However, three off-chain legal prerequisites remain unresolved:
-(i) formal FSCA registration as a CIS, requiring a licensed management
-company and approved trust deed; (ii) a legal opinion confirming that
-the ERC-3643 token transfer constitutes a valid transfer of beneficial
-interest under South African law; and (iii) compliance with the
-Financial Intelligence Centre Act (FICA) for customer due diligence.
-These off-chain legal structures are outside the scope of the current
-technical prototype and represent the primary pathway dependency for
-production deployment. No formal legal opinion has been obtained, and
-the regulatory analysis presented here should not be construed as
-legal advice.
+Unlike Power Ledger, which assumes functioning grid interconnection and relies on unverified grid meters, Veridian anchors trust in local hardware cryptography. Unlike Sun Exchange, which maintains centralized custody of ownership ledgers and yield distributions, Veridian enforces compliance via ERC-3643 while removing custodial risk from the settlement stage.
 
 % =============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 % =============================================================================
 
-This paper has presented Veridian, a DePIN protocol for hardware-attested
-fractional financing of solar infrastructure in South Africa. The
-protocol makes two primary contributions to the DePIN and decentralized
-energy systems literature.
+This paper introduced a generalized Cryptoeconomic Lifecycle Architecture for decentralized energy assets, mapping the explicit trust boundaries across Capital Formation, Compliance, Telemetry, Settlement, and Governance. Through the Veridian solar EaaS prototype, we demonstrated that physical telemetry can be cryptographically linked to regulated on-chain settlement, producing a verifiable 18.7\% yield for retail investors. 
 
-At the \emph{design level}, the protocol specifies an end-to-end trust
-chain from TPM~2.0 hardware-signed telemetry through an ERC-3643
-compliance-gated token layer to deterministic USDC yield settlement on
-Optimism, governed by the 75/8/7/5/5 revenue waterfall and secured by
-a 3-of-5 multisignature escrow. The oracle-referenced price cap
-mechanism ($P_{\text{proposed}} \leq 0.90 \times P_{\text{grid}}$)
-represents a novel governance constraint that structurally prevents
-investor-captured DAOs from extracting surplus from energy consumers.
-
-At the \emph{evaluation level}, the current prototype operates under
-a two-tier trust model (Section~\ref{sec:trustmodel}): hardware
-attestation is simulated with software keys, and oracle delivery is
-centralized. The end-to-end simulation validates the economic model and
-protocol flow: a 450~W panel produces a base-case investor yield of
-20.7\% per annum (18.7\% under realistic degradation and inverter loss
-assumptions per Table~\ref{tab:sensitivity}), with seasonal generation
-bounded between 49.5~kWh in June and 101.5~kWh in January. The gas
-cost analysis (Section~\ref{sec:gascost}) confirms that push-based
-yield distribution is viable for up to approximately 1,150 holders on
-Optimism before reaching the block gas limit, motivating a Merkle-proof
-pull pattern for larger deployments.
-
-The path from prototype to production requires resolving four
-dependencies: (i) physical TPM~2.0 provisioning in field metering
-hardware, (ii) regulated KYC provider integration replacing the mocked
-AutoKYC, (iii) Chainlink Functions mainnet subscription for decentralized
-oracle delivery, and (iv) formal FSCA registration under the CIS Act
-(Section~45 of 2002) and Financial Markets Act (19 of 2012). Each
-dependency is independently addressable and does not require
-architectural changes to the protocol design.
+By providing an honest, rigorous map of where trust relies on cryptography versus law or plain faith, this architecture offers a blueprint for DePIN protocols to scale out of permissionless sandboxes and into complex, regulated infrastructure financing environments.
 
 % =============================================================================
 \section*{Acknowledgment}
 
-The authors thank the faculty and teaching assistants of the UZH
-Deep Dive into Blockchain 2026 programme, and the UZH Blockchain
-Center for providing the research environment and review support
-that enabled this work.
+The authors thank the faculty and teaching assistants of the UZH Deep Dive into Blockchain 2026 programme, and the UZH Blockchain Center for providing the research environment and review support that enabled this work.
 
 % =============================================================================
 \bibliographystyle{IEEEtran}

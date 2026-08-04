@@ -1,0 +1,54 @@
+Hi ​S​asi,
+
+I've decided not to submit Veridian. I want to explain why properly, because the reason matters more than the deadline does.
+
+​References
+I asked you for [8] and [9] because I couldn't find either of them. [8] Zhang, Liu & Chen at IEEE ICBC 2022 does not appear in the ICBC 2022 proceedings. [9] Massaro et al. in the Journal of Financial Regulation returns nothing either.
+
+Two more things, in different sections. Section IV-F states that the PricingController queries a Chainlink Price Feed tracking the regulated Eskom residential tariff. No such feed exists​; Eskom tariffs are set annually by NERSA and published as documents; there is nothing on-chain for a contract to read. And Table V reports a fee split (Champions 1%, Core 2%, Opportunity 4.5%) that appears nowhere else in the paper and contradicts the 75/8/7/5/5 waterfall the entire paper is built on.
+
+Four items, four different sections, one signature. My read is that a language model drafted parts of this and it went out without being checked back against sources. That is an extremely common failure mode right now, and I don't believe it was deliberate. But I need you to understand what it would have cost.
+
+Citations that don't exist in a submitted paper are not a review problem. They are a research integrity problem. I know someone who went through a disciplinary process for exactly this. Had this been accepted, it would have gone into the IEEE proceedings—permanently indexed, under my name and the University of Zurich's, and we were about to add Claudio as a co-author. A retraction would follow all three of us for the rest of our careers. I read the paper before putting my name on it, which is why we are having this conversation and not a different one.
+
+I'm not angry with you. I'm being direct because you're early in your career, and this is the fastest way to end one.
+
+The standard from here on: nothing goes out under my name containing a citation I haven't seen the actual paper for. Every reference is verified against a DOI or DBLP entry. Every number traceable to a measurement, a calculation, or a source. If we can't verify it, it doesn't go in.
+
+What I found and what I didn't
+The list below is what I caught in a single careful pass. Given the pattern above, I have to assume there are things I didn't catch. Before this goes anywhere, the whole paper needs an integrity audit: every reference, every table, every claim about an external system.
+
+Must fix
+
+All 15 references verified against DOI or DBLP. Anything unverifiable comes out, along with the sentence it supports. For [8] there's a real alternative: Lin, Wang, Shi, Zhang & Cao, "Decentralized Physical Infrastructure Network (DePIN): Challenges and Opportunities," arXiv:2406.02239​, it fits Section III well.
+Table V — reconcile with the 75/8/7/5/5 waterfall, or explain why the simulation script implements a different fee model. As it stands it reads as evidence that the code and the paper have diverged, which undermines every other number in the paper.
+Chainlink Eskom feed (IV-F) — rewrite. The tariff reference needs a dedicated oracle or an on-chain parameter, and that dependency should be stated as a trust assumption rather than presented as existing infrastructure.
+Title, abstract, Table VII vs. Section VI-D. The title claims "Hardware-Attested" and Table VII lists "TPM 2.0 ECDSA" against "None" for competitors — but VI-D correctly states the TPM is simulated with extractable software keys and that tpm_verify.py contains a development bypass. VI-D is right; the title and the table need to match it. Claiming a feature in a comparison table that the artifact doesn't have is the kind of thing reviewers react to most strongly.
+Deployment evidence. If the contracts are live on Optimism Sepolia, give the four addresses and a couple of transaction hashes. If they aren't, the word "deployed" has to come out.
+
+Should fix
+
+Lead with 18.7%, not 20.7%. The base case assumes zero degradation and zero inverter loss—physically impossible—and you say so yourself two paragraphs later. Also, IV-A gives 20.7% and 22.4% in adjacent sentences for what appears to be the same quantity.
+Collection risk is missing entirely. Table II varies sun-hours, degradation and inverter loss, but not the collection rate — which is by far the largest risk in an EaaS deployment to lower-income households. The group report was clearer on this: investor cash flow comes from the household's collected payment, not from generation. Add c = 100/90/80% rows.
+FX risk isn't mentioned. Investors deposit USDC, revenue is in ZAR, distributions are in USDC. Who carries that exposure? One paragraph, but a finance-literate reviewer will go straight there.
+Sun Exchange​/P2P energy trading is absent. Same country, same fractional-solar model, operating since 2015, with its own token and insurance fund. Table VII compares against Power Ledger and Ondo but not the direct precedent. Leaving it out reads as either not knowing the field or choosing the comparison.
+Equation (4) vs. the staking rule — the equation applies a flat 0.75 while IV-D says staked holders get 75% and unstaked 60%.
+Generation vs. consumption. Equation (2) defines q as energy consumed by the household; Table III computes revenue from generation. Pick one definition and hold it.
+Circuit-breaker thresholds (VI-A) — 5%, 15%, 10%, 24 months are stated without justification or evidence of implementation. Either justify them or move them to future work.
+Figure 1: In a nine-page IEEE paper with one figure, it needs to be a proper diagram.
+
+Where this goes next 
+I don't want to lose this work. The engineering is real—you wrote the contracts, the backend, the frontend, and the deployment—and Section VI-D is genuinely good. The two-tier distinction between design-level guarantees and evaluation-level trust is more honest than a lot of published work in this space. That section is the reason I think there's a strong paper here.
+
+But I think we've been framing it wrong, and the framing is part of why the paper reaches for claims it can't support. We've been presenting Veridian as a solar financing platform. Framed that way, it competes directly with Sun Exchange, and it has to manufacture novelty in places where we don't have any.
+
+I'd rather position it as a cryptoeconomic lifecycle architecture for distributed energy assets. The contribution then isn't "we built a solar platform" — it's the full lifecycle treated as one system: capital formation, compliance-gated ownership, attested telemetry, deterministic settlement, and governance constraints, with an explicit account of which stage is secured by cryptography, which by economics, which by law, and which still by plain trust. Your Section VI-D is already the seed of exactly that. An honest map of where trust actually sits is worth more than another tokenization platform, and it generalizes beyond solar.
+
+With that framing and a proper audit, this is a real paper. Options: the next BRAINS cycle,​ or we can find another fit conference. OR IEEE Access, Ledger, or one of the DePIN workshops in the autumn. ​We need more time for a proper paper.
+
+​Also, Tao wants to join the paper, and I think he should join. Because paper will get better. Let's talk next week about the reframing and a realistic timeline. Take the weekend first, you've put a lot into this, and nothing above takes that away.
+
+Alican Alaşık 
+PhD Researcher | BDLT Group
+UZH Blockchain Center
+University of Zurich

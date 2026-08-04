@@ -10,10 +10,10 @@ from the research annex:
               * degradation_factor(years since install) * days_in_month
 
   gross_revenue   = kWh_month * offtake_rate * grid_tariff(year)
-  champions_fee    = 1.0% of gross_revenue
-  core_fee         = 2.0% of gross_revenue
-  opportunity_fee  = 4.5% of gross_revenue
-  net_yield        = 92.5% of gross_revenue
+  champions_fee    = 15.0% of gross_revenue (8% O&M + 7% Reserves)
+  core_fee         = 5.0% of gross_revenue (Platform)
+  opportunity_fee  = 5.0% of gross_revenue (Expansion)
+  net_yield        = 75.0% of gross_revenue (Investor Yield)
   om_cost          = 1.5%/yr of capex, pro-rated monthly
   insurance_cost   = 1.0%/yr of capex, pro-rated monthly
   sinking_fund     = capex / (25 years * 12 months)   [straight-line]
@@ -155,14 +155,14 @@ def main():
 
             grid_tariff = tariffs.get(y, tariffs[max(tariffs)])
             gross_revenue = month_kwh * offtake_rate * grid_tariff
-            champions_fee = gross_revenue * 0.010
-            core_fee = gross_revenue * 0.020
-            opportunity_fee = gross_revenue * 0.045
-            net_yield = gross_revenue * 0.925
-            om_cost = capex * OM_RATE_ANNUAL / 12
-            insurance_cost = capex * INSURANCE_RATE_ANNUAL / 12
+            champions_fee = gross_revenue * 0.15
+            core_fee = gross_revenue * 0.05
+            opportunity_fee = gross_revenue * 0.05
+            net_yield = gross_revenue * 0.75
+            om_cost = gross_revenue * 0.08  # Derived from champions_fee
+            insurance_cost = gross_revenue * 0.07  # Derived from champions_fee
             sinking_fund = capex / (PANEL_LIFESPAN_YEARS * 12)
-            net_distributable = net_yield - om_cost - insurance_cost - sinking_fund
+            net_distributable = net_yield - sinking_fund
             household_bill_saved = month_kwh * self_consumption_rate * grid_tariff
 
             fin_rows.append((
